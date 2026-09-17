@@ -1,0 +1,14 @@
+name = "loottrack-worker"
+main = "src/index.ts"
+compatibility_date = "2024-09-01"
+
+[triggers]
+crons = ["0 * * * *"]
+
+[vars]
+RESEND_API_KEY = "YOUR_RESEND_API_KEY"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "loottrack-db"
+database_id = "6b346e4b-3e1a-402a-bbae-1b0713028882"

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:ordering="together">
+
+    <!-- Rubik's Cube Move 1: Fast 90° Twist -->
+    <objectAnimator
+        android:propertyName="rotation"
+        android:startOffset="0"
+        android:duration="200"
+        android:valueFrom="0"
+        android:valueTo="90"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/overshoot_interpolator" />
+
+    <!-- Rubik's Cube Move 2: Fast 90° Twist to 180° -->
+    <objectAnimator
+        android:propertyName="rotation"
+        android:startOffset="250"
+        android:duration="200"
+        android:valueFrom="90"
+        android:valueTo="180"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/overshoot_interpolator" />
+
+    <!-- Rubik's Cube Move 3: Fast 90° Twist to 270° -->
+    <objectAnimator
+        android:propertyName="rotation"
+        android:startOffset="500"
+        android:duration="200"
+        android:valueFrom="180"
+        android:valueTo="270"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/overshoot_interpolator" />
+
+    <!-- Rubik's Cube Move 4: Final Solve Twist to 360° -->
+    <objectAnimator
+        android:propertyName="rotation"
+        android:startOffset="750"
+        android:duration="220"
+        android:valueFrom="270"
+        android:valueTo="360"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/overshoot_interpolator" />
+
+    <!-- Perspective Squeeze during Move 1 -->
+    <objectAnimator
+        android:propertyName="scaleX"
+        android:startOffset="0"
+        android:duration="100"
+        android:valueFrom="0.55"
+        android:valueTo="0.48"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/accelerate_interpolator" />
+    <objectAnimator
+        android:propertyName="scaleX"
+        android:startOffset="100"
+        android:duration="100"
+        android:valueFrom="0.48"
+        android:valueTo="0.55"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/decelerate_interpolator" />
+
+    <!-- Perspective Squeeze during Move 2 -->
+    <objectAnimator
+        android:propertyName="scaleX"
+        android:startOffset="250"
+        android:duration="100"
+        android:valueFrom="0.55"
+        android:valueTo="0.48"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/accelerate_interpolator" />
+    <objectAnimator
+        android:propertyName="scaleX"
+        android:startOffset="350"
+        android:duration="100"
+        android:valueFrom="0.48"
+        android:valueTo="0.55"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/decelerate_interpolator" />
+
+    <!-- Perspective Squeeze during Move 3 -->
+    <objectAnimator
+        android:propertyName="scaleX"
+        android:startOffset="500"
+        android:duration="100"
+        android:valueFrom="0.55"
+        android:valueTo="0.48"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/accelerate_interpolator" />
+    <objectAnimator
+        android:propertyName="scaleX"
+        android:startOffset="600"
+        android:duration="100"
+        android:valueFrom="0.48"
+        android:valueTo="0.55"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/decelerate_interpolator" />
+
+    <!-- Perspective Squeeze during Move 4 -->
+    <objectAnimator
+        android:propertyName="scaleX"
+        android:startOffset="750"
+        android:duration="110"
+        android:valueFrom="0.55"
+        android:valueTo="0.48"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/accelerate_interpolator" />
+    <objectAnimator
+        android:propertyName="scaleX"
+        android:startOffset="860"
+        android:duration="110"
+        android:valueFrom="0.48"
+        android:valueTo="0.55"
+        android:valueType="floatType"
+        android:interpolator="@android:anim/decelerate_interpolator" />
+
+</set>

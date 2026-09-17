@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +33,7 @@ import coil3.compose.AsyncImage
 import com.dirzaaulia.loottrack.model.CheapSharkDeal
 import com.dirzaaulia.loottrack.theme.CyanAccent
 import com.dirzaaulia.loottrack.theme.NeonPinkPrimary
+import com.dirzaaulia.loottrack.ui.components.BannerAd
 
 @Composable
 fun FlashDealsCarousel(
@@ -63,9 +64,10 @@ fun FlashDealsCarousel(
 
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                items(topDeals, key = { "flash_${it.dealId}" }) { deal ->
+                itemsIndexed(topDeals, key = { index, deal -> "flash_${deal.dealId}_$index" }) { index, deal ->
                     FlashDealCard(
                         deal = deal,
                         formattedSalePrice = formatPrice(deal.salePrice),
@@ -73,6 +75,20 @@ fun FlashDealsCarousel(
                         isAlertSet = isAlertSet(deal),
                         onClick = { onDealClick(deal) }
                     )
+
+                    // Inline Banner Ad between Flash Deal items
+                    if (index == 2) {
+                        Box(
+                            modifier = Modifier
+                                .width(300.dp)
+                                .height(210.dp)
+                                .border(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                                .background(MaterialTheme.colorScheme.surface),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BannerAd()
+                        }
+                    }
                 }
             }
         }

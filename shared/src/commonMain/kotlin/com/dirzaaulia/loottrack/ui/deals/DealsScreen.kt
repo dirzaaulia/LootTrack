@@ -21,7 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -281,6 +281,11 @@ fun DealsScreen(
                                                                     onOpenAlertModal = { deal -> selectedAlertDeal = deal }
                                                                 )
                                                             }
+
+                                                            // Banner Ad near Hero Card
+                                                            item(span = { GridItemSpan(gridColumnCount) }) {
+                                                                BannerAd()
+                                                            }
                                                         }
 
                                                         // Flash Deals Carousel Row
@@ -291,11 +296,6 @@ fun DealsScreen(
                                                                 isAlertSet = { deal -> viewModel.isAlertSet(deal) },
                                                                 onDealClick = { deal -> selectedDetailDeal = deal }
                                                             )
-                                                        }
-
-                                                        // AdMob Banner Ad Item
-                                                        item(span = { GridItemSpan(gridColumnCount) }) {
-                                                            BannerAd()
                                                         }
 
                                                         // All Deals Section Header
@@ -320,21 +320,31 @@ fun DealsScreen(
                                                             }
                                                         }
 
-                                                        // Deals Grid Cards
-                                                        itemsIndexed(current.deals, key = { _, deal -> deal.dealId }) { index, deal ->
-                                                            if (index >= current.deals.size - 4 && !current.isLastPage && !current.isLoadingNextPage) {
-                                                                LaunchedEffect(index) {
-                                                                    viewModel.loadNextPage()
+                                                        // Deals Grid Cards Chunked with Banner Ads Between Grid Rows
+                                                        val dealChunks = current.deals.chunked(8)
+                                                        dealChunks.forEachIndexed { chunkIndex, chunkDeals ->
+                                                            items(chunkDeals, key = { deal -> "deal_${deal.dealId}" }) { deal ->
+                                                                val globalIndex = current.deals.indexOf(deal)
+                                                                if (globalIndex >= current.deals.size - 4 && !current.isLastPage && !current.isLoadingNextPage) {
+                                                                    LaunchedEffect(globalIndex) {
+                                                                        viewModel.loadNextPage()
+                                                                    }
                                                                 }
+
+                                                                GridDealCard(
+                                                                    deal = deal,
+                                                                    formattedSalePrice = viewModel.formatPrice(deal.salePrice),
+                                                                    formattedNormalPrice = viewModel.formatPrice(deal.normalPrice),
+                                                                    isAlertSet = viewModel.isAlertSet(deal),
+                                                                    onClick = { selectedDetailDeal = deal }
+                                                                )
                                                             }
 
-                                                            GridDealCard(
-                                                                deal = deal,
-                                                                formattedSalePrice = viewModel.formatPrice(deal.salePrice),
-                                                                formattedNormalPrice = viewModel.formatPrice(deal.normalPrice),
-                                                                isAlertSet = viewModel.isAlertSet(deal),
-                                                                onClick = { selectedDetailDeal = deal }
-                                                            )
+                                                            if (chunkIndex < dealChunks.size - 1) {
+                                                                item(span = { GridItemSpan(gridColumnCount) }) {
+                                                                    BannerAd()
+                                                                }
+                                                            }
                                                         }
 
                                                         if (current.isLoadingNextPage) {

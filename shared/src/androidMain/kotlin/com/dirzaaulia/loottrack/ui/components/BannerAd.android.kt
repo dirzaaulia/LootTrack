@@ -85,13 +85,13 @@ actual fun BannerAd(
                     )
                 }
 
-                // 1. MediaView (Artwork)
+                // 1. MediaView (Artwork - CENTER_CROP fills 100% of the given card area)
                 val mediaView = MediaView(context).apply {
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    setImageScaleType(ImageView.ScaleType.FIT_CENTER)
+                    setImageScaleType(ImageView.ScaleType.CENTER_CROP)
                 }
                 rootLayout.addView(mediaView)
                 nativeAdView.mediaView = mediaView

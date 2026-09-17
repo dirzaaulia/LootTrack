@@ -5,6 +5,7 @@ import android.graphics.Color as AndroidColor
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.text.TextUtils
+import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -30,6 +31,8 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
+
+private const val TAG = "LootTrackAdMob"
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -179,8 +182,11 @@ actual fun BannerAd(
                 val productionAdUnitId = "ca-app-pub-6717632447198427/6575141423"
                 val testAdUnitId = "ca-app-pub-3940256099942544/2247696110"
 
+                Log.d(TAG, "Requesting Native Ad for unit: $productionAdUnitId")
+
                 val adLoader = AdLoader.Builder(context, productionAdUnitId)
                     .forNativeAd { ad ->
+                        Log.d(TAG, "SUCCESS // Native Ad loaded! Headline: ${ad.headline}, Advertiser: ${ad.advertiser}")
                         nativeAd?.destroy()
                         nativeAd = ad
 
@@ -191,10 +197,22 @@ actual fun BannerAd(
                         nativeAdView.setNativeAd(ad)
                     }
                     .withAdListener(object : AdListener() {
+                        override fun onAdLoaded() {
+                            Log.d(TAG, "AdListener.onAdLoaded triggered for production unit.")
+                        }
+
                         override fun onAdFailedToLoad(error: LoadAdError) {
+                            Log.w(
+                                TAG,
+                                "WARN // Production Native Ad failed! Code: ${error.code}, Msg: ${error.message}, Domain: ${error.domain}"
+                            )
+                            Log.w(TAG, "Response Info: ${error.responseInfo}")
+
                             // Fallback to test ad unit if production ad unit is still in 24-hour provisioning window
+                            Log.d(TAG, "Attempting fallback load with Test Ad Unit: $testAdUnitId")
                             val fallbackLoader = AdLoader.Builder(context, testAdUnitId)
                                 .forNativeAd { ad ->
+                                    Log.d(TAG, "SUCCESS // Fallback Test Native Ad loaded! Headline: ${ad.headline}")
                                     nativeAd?.destroy()
                                     nativeAd = ad
 
@@ -204,8 +222,24 @@ actual fun BannerAd(
 
                                     nativeAdView.setNativeAd(ad)
                                 }
+                                .withAdListener(object : AdListener() {
+                                    override fun onAdFailedToLoad(fallbackError: LoadAdError) {
+                                        Log.e(
+                                            TAG,
+                                            "ERR // Fallback Test Native Ad also failed! Code: ${fallbackError.code}, Msg: ${fallbackError.message}"
+                                        )
+                                    }
+                                })
                                 .build()
                             fallbackLoader.loadAd(AdRequest.Builder().build())
+                        }
+
+                        override fun onAdImpression() {
+                            Log.d(TAG, "AdMob Impression recorded!")
+                        }
+
+                        override fun onAdClicked() {
+                            Log.d(TAG, "AdMob Click recorded!")
                         }
                     })
                     .build()

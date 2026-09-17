@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -37,8 +38,16 @@ class MainActivity : ComponentActivity() {
             initKoin()
         }
 
-        // Initialize Google Mobile Ads SDK
-        MobileAds.initialize(this) { _ -> }
+        // Initialize Google Mobile Ads SDK with detailed logging
+        MobileAds.initialize(this) { status ->
+            val statusMap = status.adapterStatusMap
+            for ((adapter, adapterStatus) in statusMap) {
+                Log.d(
+                    "LootTrackAdMob",
+                    "MobileAds Init Adapter: $adapter, State: ${adapterStatus.initializationState}, Desc: ${adapterStatus.description}"
+                )
+            }
+        }
 
         checkAndRequestNotificationPermission()
 

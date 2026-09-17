@@ -1,6 +1,7 @@
 package com.dirzaaulia.loottrack.ui.components
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.graphics.Color as AndroidColor
 import android.graphics.Typeface
@@ -36,6 +37,50 @@ import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
 
 private const val TAG = "LootTrackAdMob"
+
+class NativeAdLoader(
+    private val context: Context,
+    private val adUnitId: String,
+    private val onNativeAdLoaded: (NativeAd) -> Unit,
+    private val onAdFailed: (LoadAdError) -> Unit = {}
+) {
+    private var adLoader: AdLoader? = null
+
+    @SuppressLint("MissingPermission")
+    fun loadAd() {
+        val adOptions = NativeAdOptions.Builder()
+            .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_TOP_RIGHT)
+            .build()
+
+        adLoader = AdLoader.Builder(context, adUnitId)
+            .withNativeAdOptions(adOptions)
+            .forNativeAd { ad ->
+                Log.d(TAG, "NativeAdLoader SUCCESS // Headline: ${ad.headline}, Advertiser: ${ad.advertiser}")
+                onNativeAdLoaded(ad)
+            }
+            .withAdListener(object : AdListener() {
+                override fun onAdLoaded() {
+                    Log.d(TAG, "NativeAdLoader.onAdLoaded triggered.")
+                }
+
+                override fun onAdFailedToLoad(error: LoadAdError) {
+                    Log.e(TAG, "NativeAdLoader ERR // Code: ${error.code}, Msg: ${error.message}, Domain: ${error.domain}")
+                    onAdFailed(error)
+                }
+
+                override fun onAdImpression() {
+                    Log.d(TAG, "NativeAdLoader // Impression recorded!")
+                }
+
+                override fun onAdClicked() {
+                    Log.d(TAG, "NativeAdLoader // Click recorded!")
+                }
+            })
+            .build()
+
+        adLoader?.loadAd(AdRequest.Builder().build())
+    }
+}
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -189,16 +234,10 @@ actual fun BannerAd(
                 rootLayout.addView(bottomRow)
                 nativeAdView.addView(rootLayout)
 
-                Log.d(TAG, "Requesting Native Ad (isDebug=$isDebug) with unit: $activeAdUnitId")
-
-                val adOptions = NativeAdOptions.Builder()
-                    .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_TOP_RIGHT)
-                    .build()
-
-                val adLoader = AdLoader.Builder(context, activeAdUnitId)
-                    .withNativeAdOptions(adOptions)
-                    .forNativeAd { ad ->
-                        Log.d(TAG, "SUCCESS // Native Ad loaded! Headline: ${ad.headline}, Advertiser: ${ad.advertiser}")
+                val loader = NativeAdLoader(
+                    context = context,
+                    adUnitId = activeAdUnitId,
+                    onNativeAdLoaded = { ad ->
                         nativeAd?.destroy()
                         nativeAd = ad
 
@@ -227,33 +266,11 @@ actual fun BannerAd(
                             ctaView.text = ad.callToAction?.uppercase()
                         }
 
-                        // Always set native ad on view AFTER populating asset views
+                        // Set NativeAd on NativeAdView AFTER populating assets
                         nativeAdView.setNativeAd(ad)
                     }
-                    .withAdListener(object : AdListener() {
-                        override fun onAdLoaded() {
-                            Log.d(TAG, "AdListener.onAdLoaded triggered for unit: $activeAdUnitId")
-                        }
-
-                        override fun onAdFailedToLoad(error: LoadAdError) {
-                            Log.e(
-                                TAG,
-                                "ERR // Native Ad failed! Code: ${error.code}, Msg: ${error.message}, Domain: ${error.domain}"
-                            )
-                            Log.e(TAG, "Response Info: ${error.responseInfo}")
-                        }
-
-                        override fun onAdImpression() {
-                            Log.d(TAG, "AdMob Impression recorded!")
-                        }
-
-                        override fun onAdClicked() {
-                            Log.d(TAG, "AdMob Click recorded!")
-                        }
-                    })
-                    .build()
-
-                adLoader.loadAd(AdRequest.Builder().build())
+                )
+                loader.loadAd()
 
                 nativeAdView
             },

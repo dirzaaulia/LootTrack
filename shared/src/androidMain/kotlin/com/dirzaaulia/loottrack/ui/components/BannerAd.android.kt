@@ -1,6 +1,8 @@
 package com.dirzaaulia.loottrack.ui.components
 
-import androidx.compose.foundation.layout.Box
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,18 +16,37 @@ import com.google.android.gms.ads.AdView
 actual fun BannerAd(
     modifier: Modifier
 ) {
-    Box(
+    BoxWithConstraints(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
+        val widthInDp = maxWidth.value.toInt()
+        val heightInDp = maxHeight.value.toInt()
+
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
+                val adSize = when {
+                    widthInDp >= 280 && heightInDp >= 180 -> AdSize.MEDIUM_RECTANGLE
+                    widthInDp > 0 -> AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthInDp)
+                    else -> AdSize.BANNER
+                }
+
                 AdView(context).apply {
-                    setAdSize(AdSize.FLUID)
+                    setAdSize(adSize)
                     adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                    layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
                     loadAd(AdRequest.Builder().build())
                 }
+            },
+            update = { adView ->
+                adView.layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
             }
         )
     }

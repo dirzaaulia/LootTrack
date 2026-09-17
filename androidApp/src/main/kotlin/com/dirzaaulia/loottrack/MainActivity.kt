@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.google.android.gms.ads.MobileAds
 import com.dirzaaulia.loottrack.data.initAndroidContext
 import com.dirzaaulia.loottrack.di.initKoin
 import com.dirzaaulia.loottrack.utils.initUrlLauncherContext
@@ -35,6 +36,9 @@ class MainActivity : ComponentActivity() {
         if (GlobalContext.getOrNull() == null) {
             initKoin()
         }
+
+        // Initialize Google Mobile Ads SDK
+        MobileAds.initialize(this) { _ -> }
 
         checkAndRequestNotificationPermission()
 

@@ -23,8 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.viewinterop.AndroidView
+import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
@@ -72,7 +74,7 @@ actual fun BannerAd(
                     )
                 }
 
-                // 1. MediaView (Artwork - FIT_CENTER prevents cutting off advertiser image)
+                // 1. MediaView (Artwork)
                 val mediaView = MediaView(context).apply {
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -83,7 +85,7 @@ actual fun BannerAd(
                 rootLayout.addView(mediaView)
                 nativeAdView.mediaView = mediaView
 
-                // 2. Mandatory Ad Attribution Badge ("AD") - Required by AdMob Policy & Validator
+                // 2. Cyberpunk Ad Attribution Badge ("AD")
                 val badgeDrawable = GradientDrawable().apply {
                     setColor(AndroidColor.parseColor("#FF007A")) // Neon Pink
                     setStroke((1.5f * density).toInt(), AndroidColor.parseColor("#00F0FF")) // Cyan Accent border
@@ -105,7 +107,7 @@ actual fun BannerAd(
                 }
                 rootLayout.addView(adBadge)
 
-                // 3. Bottom Row Overlay (Headline, Body & CTA Button)
+                // 3. Bottom Row Overlay
                 val bottomRow = LinearLayout(context).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
@@ -119,7 +121,6 @@ actual fun BannerAd(
                     }
                 }
 
-                // Text Column with Right Margin to Prevent Overlapping Button
                 val textColumn = LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
                     layoutParams = LinearLayout.LayoutParams(
@@ -152,7 +153,7 @@ actual fun BannerAd(
 
                 bottomRow.addView(textColumn)
 
-                // Call To Action Button ("INSTALL" / "GET")
+                // Call To Action Button
                 val ctaDrawable = GradientDrawable().apply {
                     setColor(AndroidColor.parseColor("#FF007A")) // Neon Pink
                     setCornerRadius(6f * density)
@@ -175,18 +176,38 @@ actual fun BannerAd(
                 rootLayout.addView(bottomRow)
                 nativeAdView.addView(rootLayout)
 
-                val adLoader = AdLoader.Builder(context, "ca-app-pub-6717632447198427/6575141423")
+                val productionAdUnitId = "ca-app-pub-6717632447198427/6575141423"
+                val testAdUnitId = "ca-app-pub-3940256099942544/2247696110"
+
+                val adLoader = AdLoader.Builder(context, productionAdUnitId)
                     .forNativeAd { ad ->
                         nativeAd?.destroy()
                         nativeAd = ad
 
-                        // Populate Native Ad Assets
                         headlineView.text = ad.headline ?: "Sponsored Offer"
                         bodyView.text = ad.body ?: ad.advertiser ?: "Partner Promo"
                         ctaView.text = (ad.callToAction ?: "GET").uppercase()
 
                         nativeAdView.setNativeAd(ad)
                     }
+                    .withAdListener(object : AdListener() {
+                        override fun onAdFailedToLoad(error: LoadAdError) {
+                            // Fallback to test ad unit if production ad unit is still in 24-hour provisioning window
+                            val fallbackLoader = AdLoader.Builder(context, testAdUnitId)
+                                .forNativeAd { ad ->
+                                    nativeAd?.destroy()
+                                    nativeAd = ad
+
+                                    headlineView.text = ad.headline ?: "Sponsored Offer"
+                                    bodyView.text = ad.body ?: ad.advertiser ?: "Partner Promo"
+                                    ctaView.text = (ad.callToAction ?: "GET").uppercase()
+
+                                    nativeAdView.setNativeAd(ad)
+                                }
+                                .build()
+                            fallbackLoader.loadAd(AdRequest.Builder().build())
+                        }
+                    })
                     .build()
 
                 adLoader.loadAd(AdRequest.Builder().build())

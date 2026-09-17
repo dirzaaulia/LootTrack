@@ -143,6 +143,7 @@ fun HeroAdCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .height(235.dp)
             .padding(horizontal = 20.dp, vertical = 8.dp)
             .shadow(16.dp, RoundedCornerShape(24.dp), spotColor = CyanAccent.copy(alpha = 0.3f))
             .clip(RoundedCornerShape(24.dp))
@@ -155,72 +156,6 @@ fun HeroAdCard(
                 shape = RoundedCornerShape(24.dp)
             )
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(170.dp)
-                    .background(Color(0xFF130F22)),
-                contentAlignment = Alignment.Center
-            ) {
-                BannerAd(modifier = Modifier.fillMaxSize())
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(14.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(NeonPinkPrimary)
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
-                ) {
-                    Text(
-                        text = "HOT SPONSORED PROMO",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.2.sp,
-                        color = Color.White
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "LOOTTRACK FEATURED SPONSOR",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 0.5.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "EXPLORE EXCLUSIVE PARTNER OFFER",
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = CyanAccent
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(CyanAccent.copy(alpha = 0.2f))
-                        .border(1.dp, CyanAccent, RoundedCornerShape(10.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = "SPONSORED",
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Black,
-                        color = CyanAccent
-                    )
-                }
-            }
-        }
+        BannerAd(modifier = Modifier.fillMaxSize())
     }
 }

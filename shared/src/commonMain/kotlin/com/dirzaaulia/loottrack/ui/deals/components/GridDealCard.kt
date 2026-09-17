@@ -164,6 +164,7 @@ fun GridDealAdCard(
 ) {
     Box(
         modifier = modifier
+            .fillMaxWidth()
             .height(160.dp)
             .border(
                 width = 1.dp,
@@ -174,64 +175,6 @@ fun GridDealAdCard(
             )
             .background(MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color(0xFF130F22)),
-                contentAlignment = Alignment.Center
-            ) {
-                BannerAd()
-
-                // Top Sponsored Badge
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .background(NeonPinkPrimary)
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "SPONSORED",
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color.White
-                    )
-                }
-            }
-
-            // Bottom Text Info
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "FEATURED PROMO",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.5.sp,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Box(
-                    modifier = Modifier
-                        .border(0.8.dp, CyanAccent)
-                        .background(CyanAccent.copy(alpha = 0.15f))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "AD",
-                        fontSize = 8.sp,
-                        fontWeight = FontWeight.Black,
-                        color = CyanAccent
-                    )
-                }
-            }
-        }
+        BannerAd(modifier = Modifier.fillMaxSize())
     }
 }

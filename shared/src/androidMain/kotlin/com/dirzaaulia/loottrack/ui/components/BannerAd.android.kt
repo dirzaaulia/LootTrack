@@ -1,64 +1,82 @@
 package com.dirzaaulia.loottrack.ui.components
 
+import android.annotation.SuppressLint
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import androidx.compose.foundation.layout.BoxWithConstraints
+import android.widget.ImageView
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.viewinterop.AndroidView
+import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
-import kotlin.math.max
+import com.google.android.gms.ads.nativead.MediaView
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
 
+@SuppressLint("MissingPermission")
 @Composable
 actual fun BannerAd(
     modifier: Modifier
 ) {
-    BoxWithConstraints(
-        modifier = modifier.fillMaxSize(),
+    var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            nativeAd?.destroy()
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .clipToBounds(),
         contentAlignment = Alignment.Center
     ) {
-        val containerWidth = maxWidth.value
-        val containerHeight = maxHeight.value
-
-        // AdMob Banner base dimensions: Medium Rectangle (300x250) or Standard Banner (320x50)
-        val isMedium = containerWidth >= 260f && containerHeight >= 160f
-        val adWidth = if (isMedium) 300f else 320f
-        val adHeight = if (isMedium) 250f else 50f
-
-        val scaleX = containerWidth / adWidth
-        val scaleY = containerHeight / adHeight
-        val fillScale = max(scaleX, scaleY)
-
         AndroidView(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    this.scaleX = fillScale
-                    this.scaleY = fillScale
-                },
+            modifier = Modifier.fillMaxSize(),
             factory = { context ->
-                val adSize = if (isMedium) AdSize.MEDIUM_RECTANGLE else AdSize.BANNER
-
-                AdView(context).apply {
-                    setAdSize(adSize)
-                    adUnitId = "ca-app-pub-3940256099942544/6300978111"
-                    layoutParams = FrameLayout.LayoutParams(
+                val nativeAdView = NativeAdView(context).apply {
+                    layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    loadAd(AdRequest.Builder().build())
                 }
+
+                val mediaView = MediaView(context).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    setImageScaleType(ImageView.ScaleType.CENTER_CROP)
+                }
+
+                nativeAdView.addView(mediaView)
+                nativeAdView.mediaView = mediaView
+
+                val adLoader = AdLoader.Builder(context, "ca-app-pub-3940256099942544/2247696110")
+                    .forNativeAd { ad ->
+                        nativeAd?.destroy()
+                        nativeAd = ad
+                        nativeAdView.setNativeAd(ad)
+                    }
+                    .build()
+
+                adLoader.loadAd(AdRequest.Builder().build())
+
+                nativeAdView
             },
-            update = { adView ->
-                adView.layoutParams = FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
+            update = { nativeAdView ->
+                nativeAd?.let { ad ->
+                    nativeAdView.setNativeAd(ad)
+                }
             }
         )
     }

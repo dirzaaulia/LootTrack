@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color as AndroidColor
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.text.TextUtils
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -65,13 +66,13 @@ actual fun BannerAd(
                     )
                 }
 
-                // 1. MediaView (Background Media / Artwork)
+                // 1. MediaView (Artwork - FIT_CENTER prevents cutting off advertiser image)
                 val mediaView = MediaView(context).apply {
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    setImageScaleType(ImageView.ScaleType.CENTER_CROP)
+                    setImageScaleType(ImageView.ScaleType.FIT_CENTER)
                 }
                 rootLayout.addView(mediaView)
                 nativeAdView.mediaView = mediaView
@@ -102,7 +103,7 @@ actual fun BannerAd(
                 val bottomRow = LinearLayout(context).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
-                    setPadding(14, 10, 14, 10)
+                    setPadding(12, 8, 12, 8)
                     setBackgroundColor(AndroidColor.parseColor("#E60F0C1B")) // Dark Translucent
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -112,20 +113,24 @@ actual fun BannerAd(
                     }
                 }
 
+                // Text Column with Right Margin to Prevent Overlapping Button
                 val textColumn = LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
                     layoutParams = LinearLayout.LayoutParams(
                         0,
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         1.0f
-                    )
+                    ).apply {
+                        setMargins(0, 0, 12, 0) // Margin guarantees separation from CTA button
+                    }
                 }
 
                 val headlineView = TextView(context).apply {
                     textSize = 11f
                     setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
                     setTextColor(AndroidColor.WHITE)
-                    setSingleLine()
+                    setSingleLine(true)
+                    ellipsize = TextUtils.TruncateAt.END
                 }
                 textColumn.addView(headlineView)
                 nativeAdView.headlineView = headlineView
@@ -133,16 +138,18 @@ actual fun BannerAd(
                 val bodyView = TextView(context).apply {
                     textSize = 9f
                     setTextColor(AndroidColor.parseColor("#00F0FF")) // Cyan Accent
-                    setSingleLine()
+                    setSingleLine(true)
+                    ellipsize = TextUtils.TruncateAt.END
                 }
                 textColumn.addView(bodyView)
                 nativeAdView.bodyView = bodyView
 
                 bottomRow.addView(textColumn)
 
-                // Call To Action Button
+                // Call To Action Button ("INSTALL" / "GET")
                 val ctaDrawable = GradientDrawable().apply {
                     setColor(AndroidColor.parseColor("#FF007A")) // Neon Pink
+                    setCornerRadius(6f)
                 }
                 val ctaView = TextView(context).apply {
                     textSize = 9f
@@ -150,6 +157,11 @@ actual fun BannerAd(
                     setTextColor(AndroidColor.WHITE)
                     background = ctaDrawable
                     setPadding(12, 6, 12, 6)
+                    setSingleLine(true)
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
                 }
                 bottomRow.addView(ctaView)
                 nativeAdView.callToActionView = ctaView

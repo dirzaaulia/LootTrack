@@ -56,6 +56,7 @@ import com.dirzaaulia.loottrack.ui.components.PriceAlertBottomSheet
 import com.dirzaaulia.loottrack.ui.deals.components.AbstractFeaturedDropHero
 import com.dirzaaulia.loottrack.ui.deals.components.DesktopFilterSidebar
 import com.dirzaaulia.loottrack.ui.deals.components.FlashDealsCarousel
+import com.dirzaaulia.loottrack.ui.deals.components.GridDealAdCard
 import com.dirzaaulia.loottrack.ui.deals.components.GridDealCard
 import com.dirzaaulia.loottrack.ui.deals.components.SavedAlertsWatchlist
 import com.dirzaaulia.loottrack.ui.info.InfoScreen
@@ -288,7 +289,7 @@ fun DealsScreen(
                                                             }
                                                         }
 
-                                                        // Flash Deals Carousel Row
+                                                        // Flash Deals Carousel Row (Contains inline FlashDealAdCard with matching card style)
                                                         item(span = { GridItemSpan(gridColumnCount) }) {
                                                             FlashDealsCarousel(
                                                                 deals = current.deals,
@@ -320,7 +321,7 @@ fun DealsScreen(
                                                             }
                                                         }
 
-                                                        // Deals Grid Cards Chunked with Banner Ads Between Grid Rows
+                                                        // Deals Grid Cards with GridDealAdCard items matching the exact card design
                                                         val dealChunks = current.deals.chunked(8)
                                                         dealChunks.forEachIndexed { chunkIndex, chunkDeals ->
                                                             items(chunkDeals, key = { deal -> "deal_${deal.dealId}" }) { deal ->
@@ -341,8 +342,8 @@ fun DealsScreen(
                                                             }
 
                                                             if (chunkIndex < dealChunks.size - 1) {
-                                                                item(span = { GridItemSpan(gridColumnCount) }) {
-                                                                    BannerAd()
+                                                                item {
+                                                                    GridDealAdCard()
                                                                 }
                                                             }
                                                         }

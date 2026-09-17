@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -29,7 +30,9 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.dirzaaulia.loottrack.model.CheapSharkDeal
 import com.dirzaaulia.loottrack.theme.CyanAccent
+import com.dirzaaulia.loottrack.theme.ElectricPurpleSecondary
 import com.dirzaaulia.loottrack.theme.NeonPinkPrimary
+import com.dirzaaulia.loottrack.ui.components.BannerAd
 
 @Composable
 fun GridDealCard(
@@ -148,6 +151,84 @@ fun GridDealCard(
                         fontSize = 10.sp,
                         color = Color.White.copy(alpha = 0.6f),
                         textDecoration = TextDecoration.LineThrough
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun GridDealAdCard(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .height(160.dp)
+            .border(
+                width = 1.dp,
+                brush = Brush.horizontalGradient(
+                    listOf(CyanAccent, ElectricPurpleSecondary)
+                ),
+                shape = RectangleShape
+            )
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .background(Color(0xFF130F22)),
+                contentAlignment = Alignment.Center
+            ) {
+                BannerAd()
+
+                // Top Sponsored Badge
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .background(NeonPinkPrimary)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "SPONSORED",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color.White
+                    )
+                }
+            }
+
+            // Bottom Text Info
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "FEATURED PROMO",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.5.sp,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Box(
+                    modifier = Modifier
+                        .border(0.8.dp, CyanAccent)
+                        .background(CyanAccent.copy(alpha = 0.15f))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "AD",
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Black,
+                        color = CyanAccent
                     )
                 }
             }

@@ -8,6 +8,7 @@ import android.graphics.drawable.GradientDrawable
 import android.text.TextUtils
 import android.util.Log
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -31,6 +32,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
 
 private const val TAG = "LootTrackAdMob"
@@ -189,16 +191,43 @@ actual fun BannerAd(
 
                 Log.d(TAG, "Requesting Native Ad (isDebug=$isDebug) with unit: $activeAdUnitId")
 
+                val adOptions = NativeAdOptions.Builder()
+                    .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_TOP_RIGHT)
+                    .build()
+
                 val adLoader = AdLoader.Builder(context, activeAdUnitId)
+                    .withNativeAdOptions(adOptions)
                     .forNativeAd { ad ->
                         Log.d(TAG, "SUCCESS // Native Ad loaded! Headline: ${ad.headline}, Advertiser: ${ad.advertiser}")
                         nativeAd?.destroy()
                         nativeAd = ad
 
-                        headlineView.text = ad.headline ?: "Sponsored Offer"
-                        bodyView.text = ad.body ?: ad.advertiser ?: "Partner Promo"
-                        ctaView.text = (ad.callToAction ?: "GET").uppercase()
+                        // 1. Headline
+                        if (ad.headline.isNullOrEmpty()) {
+                            headlineView.visibility = View.GONE
+                        } else {
+                            headlineView.visibility = View.VISIBLE
+                            headlineView.text = ad.headline
+                        }
 
+                        // 2. Body / Advertiser
+                        val bodyText = ad.body ?: ad.advertiser
+                        if (bodyText.isNullOrEmpty()) {
+                            bodyView.visibility = View.GONE
+                        } else {
+                            bodyView.visibility = View.VISIBLE
+                            bodyView.text = bodyText
+                        }
+
+                        // 3. Call to Action
+                        if (ad.callToAction.isNullOrEmpty()) {
+                            ctaView.visibility = View.GONE
+                        } else {
+                            ctaView.visibility = View.VISIBLE
+                            ctaView.text = ad.callToAction?.uppercase()
+                        }
+
+                        // Always set native ad on view AFTER populating asset views
                         nativeAdView.setNativeAd(ad)
                     }
                     .withAdListener(object : AdListener() {

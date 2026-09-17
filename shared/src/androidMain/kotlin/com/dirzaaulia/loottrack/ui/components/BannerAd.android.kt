@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import kotlin.math.max
 
 @Composable
 actual fun BannerAd(
@@ -20,17 +22,27 @@ actual fun BannerAd(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        val widthInDp = maxWidth.value.toInt()
-        val heightInDp = maxHeight.value.toInt()
+        val containerWidth = maxWidth.value
+        val containerHeight = maxHeight.value
+
+        // AdMob Banner base dimensions: Medium Rectangle (300x250) or Standard Banner (320x50)
+        val isMedium = containerWidth >= 260f && containerHeight >= 160f
+        val adWidth = if (isMedium) 300f else 320f
+        val adHeight = if (isMedium) 250f else 50f
+
+        val scaleX = containerWidth / adWidth
+        val scaleY = containerHeight / adHeight
+        val fillScale = max(scaleX, scaleY)
 
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    this.scaleX = fillScale
+                    this.scaleY = fillScale
+                },
             factory = { context ->
-                val adSize = when {
-                    widthInDp >= 280 && heightInDp >= 180 -> AdSize.MEDIUM_RECTANGLE
-                    widthInDp > 0 -> AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthInDp)
-                    else -> AdSize.BANNER
-                }
+                val adSize = if (isMedium) AdSize.MEDIUM_RECTANGLE else AdSize.BANNER
 
                 AdView(context).apply {
                     setAdSize(adSize)

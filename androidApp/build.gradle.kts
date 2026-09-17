@@ -15,9 +15,9 @@ dependencies {
     implementation(project(":shared"))
 
     implementation(libs.androidx.activity.compose)
-    implementation("androidx.fragment:fragment-ktx:1.8.5")
+    implementation("androidx.fragment:fragment-ktx:1.9.0")
     implementation(libs.androidx.core.splashscreen)
-    implementation("com.google.android.gms:play-services-ads:23.6.0")
+    implementation(libs.admob)
     implementation(libs.koin.core)
 
     implementation(libs.compose.uiToolingPreview)

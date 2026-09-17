@@ -3,6 +3,7 @@ package com.dirzaaulia.loottrack.ui.components
 import android.annotation.SuppressLint
 import android.graphics.Color as AndroidColor
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -75,20 +76,24 @@ actual fun BannerAd(
                 rootLayout.addView(mediaView)
                 nativeAdView.mediaView = mediaView
 
-                // 2. Mandatory Ad Attribution Badge ("Ad") - Required by AdMob Policy & Validator
+                // 2. Cyberpunk Ad Attribution Badge ("AD") - Styled to Match LootTrack Aesthetic
+                val badgeDrawable = GradientDrawable().apply {
+                    setColor(AndroidColor.parseColor("#FF007A")) // Neon Pink
+                    setStroke(2, AndroidColor.parseColor("#00F0FF")) // Cyan Accent border
+                }
                 val adBadge = TextView(context).apply {
-                    text = "Ad"
-                    textSize = 10f
-                    setTypeface(null, Typeface.BOLD)
+                    text = "AD"
+                    textSize = 9f
+                    setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
                     setTextColor(AndroidColor.WHITE)
-                    setBackgroundColor(AndroidColor.parseColor("#FF007A"))
-                    setPadding(12, 4, 12, 4)
+                    background = badgeDrawable
+                    setPadding(14, 6, 14, 6)
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT
                     ).apply {
                         gravity = Gravity.TOP or Gravity.START
-                        setMargins(16, 16, 0, 0)
+                        setMargins(14, 14, 0, 0)
                     }
                 }
                 rootLayout.addView(adBadge)
@@ -97,7 +102,7 @@ actual fun BannerAd(
                 val bottomColumn = LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
                     setPadding(16, 10, 16, 12)
-                    setBackgroundColor(AndroidColor.parseColor("#CC0F0C1B"))
+                    setBackgroundColor(AndroidColor.parseColor("#E60F0C1B")) // Dark Translucent
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT
@@ -108,7 +113,7 @@ actual fun BannerAd(
 
                 val headlineView = TextView(context).apply {
                     textSize = 12f
-                    setTypeface(null, Typeface.BOLD)
+                    setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
                     setTextColor(AndroidColor.WHITE)
                     setSingleLine()
                 }
@@ -117,7 +122,7 @@ actual fun BannerAd(
 
                 val bodyView = TextView(context).apply {
                     textSize = 9f
-                    setTextColor(AndroidColor.parseColor("#A1A8C3"))
+                    setTextColor(AndroidColor.parseColor("#00F0FF")) // Cyan Accent
                     setSingleLine()
                 }
                 bottomColumn.addView(bodyView)
@@ -133,7 +138,7 @@ actual fun BannerAd(
 
                         // Populate Native Ad Assets
                         headlineView.text = ad.headline ?: "Sponsored Promotion"
-                        bodyView.text = ad.body ?: ad.advertiser ?: "LootTrack Partner"
+                        bodyView.text = ad.body ?: ad.advertiser ?: "LootTrack Partner Offer"
 
                         nativeAdView.setNativeAd(ad)
                     }

@@ -315,7 +315,7 @@ fun DealsScreen(
                                                             }
                                                         }
 
-                                                        // Deals Grid Cards with GridDealAdCard items matching the exact card design
+                                                        // Deals Grid Cards with GridDealAdCard spanning full grid width for ample room
                                                         val dealChunks = current.deals.chunked(8)
                                                         dealChunks.forEachIndexed { chunkIndex, chunkDeals ->
                                                             items(chunkDeals, key = { deal -> "deal_${deal.dealId}" }) { deal ->
@@ -336,7 +336,7 @@ fun DealsScreen(
                                                             }
 
                                                             if (chunkIndex < dealChunks.size - 1) {
-                                                                item {
+                                                                item(span = { GridItemSpan(gridColumnCount) }) {
                                                                     GridDealAdCard()
                                                                 }
                                                             }

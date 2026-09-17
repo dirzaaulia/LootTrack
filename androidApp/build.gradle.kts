@@ -16,6 +16,7 @@ dependencies {
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.splashscreen)
+    implementation("com.google.android.gms:play-services-ads:23.6.0")
     implementation(libs.koin.core)
 
     implementation(libs.compose.uiToolingPreview)

@@ -142,7 +142,7 @@ fun GridDealCard(
                         fontWeight = FontWeight.Black,
                         color = NeonPinkPrimary
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = formattedNormalPrice,
                         fontSize = 10.sp,
@@ -150,14 +150,6 @@ fun GridDealCard(
                         textDecoration = TextDecoration.LineThrough
                     )
                 }
-
-                Text(
-                    text = "RATING ${deal.dealRating}",
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
             }
         }
     }

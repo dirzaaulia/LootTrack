@@ -46,6 +46,7 @@ import com.dirzaaulia.loottrack.ui.components.AbstractCategoryBar
 import com.dirzaaulia.loottrack.ui.components.AbstractEditorialHeader
 import com.dirzaaulia.loottrack.ui.components.AbstractFloatingBottomBar
 import com.dirzaaulia.loottrack.ui.components.AbstractSearchBox
+import com.dirzaaulia.loottrack.ui.components.BannerAd
 import com.dirzaaulia.loottrack.ui.components.CurrencyBottomSheet
 import com.dirzaaulia.loottrack.ui.components.DesktopTopNavBar
 import com.dirzaaulia.loottrack.ui.components.FilterBottomSheet
@@ -110,7 +111,7 @@ fun DealsScreen(
                     .align(Alignment.TopCenter)
                     .statusBarsPadding()
             ) {
-                // Top Navigation Bar (Revamped Cyberpunk Header for Desktop/WASM)
+                // Top Navigation Bar
                 if (isWideScreen) {
                     DesktopTopNavBar(
                         selectedNavIndex = activeNavIndex,
@@ -170,7 +171,7 @@ fun DealsScreen(
                             else -> {
                                 // DEALS CATALOG TAB
                                 Column(modifier = Modifier.fillMaxSize()) {
-                                    // Mobile search & categories bar (Only when NOT on desktop widescreen with sidebar)
+                                    // Mobile search & categories bar
                                     if (!isWideScreen) {
                                         AbstractSearchBox(
                                             query = searchQuery,
@@ -194,7 +195,7 @@ fun DealsScreen(
 
                                         Spacer(modifier = Modifier.height(10.dp))
                                     } else if (!showSidebar) {
-                                        // Medium wide screens (without sidebar): Show category presets bar
+                                        // Medium wide screens (without sidebar)
                                         AbstractCategoryBar(
                                             activeCategory = activeCategory,
                                             isFiltered = filterOptions.isFiltered(),
@@ -264,7 +265,7 @@ fun DealsScreen(
                                                         contentPadding = PaddingValues(
                                                             start = if (isWideScreen) 8.dp else 16.dp,
                                                             end = if (isWideScreen) 8.dp else 16.dp,
-                                                            bottom = if (isWideScreen) 20.dp else 90.dp
+                                                            bottom = if (isWideScreen) 20.dp else 140.dp
                                                         ),
                                                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                                                         verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -290,6 +291,11 @@ fun DealsScreen(
                                                                 isAlertSet = { deal -> viewModel.isAlertSet(deal) },
                                                                 onDealClick = { deal -> selectedDetailDeal = deal }
                                                             )
+                                                        }
+
+                                                        // AdMob Banner Ad Item
+                                                        item(span = { GridItemSpan(gridColumnCount) }) {
+                                                            BannerAd()
                                                         }
 
                                                         // All Deals Section Header
@@ -336,7 +342,7 @@ fun DealsScreen(
                                                                 Box(
                                                                     modifier = Modifier
                                                                         .fillMaxWidth()
-                                                                        .padding(vertical = 16.dp),
+                                                                        .padding(top = 12.dp, bottom = 24.dp),
                                                                     contentAlignment = Alignment.Center
                                                                 ) {
                                                                     CircularProgressIndicator(
@@ -357,7 +363,7 @@ fun DealsScreen(
                         }
                     }
 
-                    // Right Desktop Embedded Filter & Watchlist Sidebar (when space permits on WASM / Desktop)
+                    // Right Desktop Embedded Filter & Watchlist Sidebar
                     if (showSidebar && activeNavIndex == 0) {
                         Spacer(modifier = Modifier.width(14.dp))
                         DesktopFilterSidebar(
@@ -379,7 +385,7 @@ fun DealsScreen(
                 }
             }
 
-            // Only show floating bottom bar on mobile / compact screens
+            // Floating bottom bar on mobile / compact screens
             if (!isWideScreen) {
                 Box(
                     modifier = Modifier
@@ -420,7 +426,6 @@ fun DealsScreen(
             )
         }
 
-        // Game Detail - Uses Modal Dialog on Desktop/WASM and Bottom Sheet on Mobile
         selectedDetailDeal?.let { deal ->
             if (isWideScreen) {
                 GameDetailModal(

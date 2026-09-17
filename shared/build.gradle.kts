@@ -46,6 +46,7 @@ kotlin {
             implementation(libs.compose.uiTooling)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.chucker.library)
+            implementation("com.google.android.gms:play-services-ads:23.6.0")
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

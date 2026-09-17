@@ -83,7 +83,7 @@ actual fun BannerAd(
                 rootLayout.addView(mediaView)
                 nativeAdView.mediaView = mediaView
 
-                // 2. Cyberpunk Ad Attribution Badge ("AD") - Top Start
+                // 2. Mandatory Ad Attribution Badge ("AD") - Required by AdMob Policy & Validator
                 val badgeDrawable = GradientDrawable().apply {
                     setColor(AndroidColor.parseColor("#FF007A")) // Neon Pink
                     setStroke((1.5f * density).toInt(), AndroidColor.parseColor("#00F0FF")) // Cyan Accent border
@@ -175,7 +175,7 @@ actual fun BannerAd(
                 rootLayout.addView(bottomRow)
                 nativeAdView.addView(rootLayout)
 
-                val adLoader = AdLoader.Builder(context, "ca-app-pub-3940256099942544/2247696110")
+                val adLoader = AdLoader.Builder(context, "ca-app-pub-6717632447198427/6575141423")
                     .forNativeAd { ad ->
                         nativeAd?.destroy()
                         nativeAd = ad

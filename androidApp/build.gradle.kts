@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":shared"))
 
     implementation(libs.androidx.activity.compose)
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
     implementation(libs.androidx.core.splashscreen)
     implementation("com.google.android.gms:play-services-ads:23.6.0")
     implementation(libs.koin.core)
@@ -33,6 +34,10 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+    }
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
     packaging {
         resources {

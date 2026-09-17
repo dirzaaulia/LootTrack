@@ -51,6 +51,12 @@ actual fun BannerAd(
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
+                val density = context.resources.displayMetrics.density
+                val padHorizontal = (16 * density).toInt()
+                val padVertical = (10 * density).toInt()
+                val badgeMargin = (12 * density).toInt()
+                val textGap = (12 * density).toInt()
+
                 val nativeAdView = NativeAdView(context).apply {
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -80,7 +86,7 @@ actual fun BannerAd(
                 // 2. Cyberpunk Ad Attribution Badge ("AD") - Top Start
                 val badgeDrawable = GradientDrawable().apply {
                     setColor(AndroidColor.parseColor("#FF007A")) // Neon Pink
-                    setStroke(2, AndroidColor.parseColor("#00F0FF")) // Cyan Accent border
+                    setStroke((1.5f * density).toInt(), AndroidColor.parseColor("#00F0FF")) // Cyan Accent border
                 }
                 val adBadge = TextView(context).apply {
                     text = "AD"
@@ -88,13 +94,13 @@ actual fun BannerAd(
                     setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
                     setTextColor(AndroidColor.WHITE)
                     background = badgeDrawable
-                    setPadding(12, 5, 12, 5)
+                    setPadding((8 * density).toInt(), (4 * density).toInt(), (8 * density).toInt(), (4 * density).toInt())
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT
                     ).apply {
                         gravity = Gravity.TOP or Gravity.START
-                        setMargins(12, 12, 0, 0)
+                        setMargins(badgeMargin, badgeMargin, 0, 0)
                     }
                 }
                 rootLayout.addView(adBadge)
@@ -103,7 +109,7 @@ actual fun BannerAd(
                 val bottomRow = LinearLayout(context).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
-                    setPadding(12, 8, 12, 8)
+                    setPadding(padHorizontal, padVertical, padHorizontal, padVertical)
                     setBackgroundColor(AndroidColor.parseColor("#E60F0C1B")) // Dark Translucent
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -121,7 +127,7 @@ actual fun BannerAd(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         1.0f
                     ).apply {
-                        setMargins(0, 0, 12, 0) // Margin guarantees separation from CTA button
+                        setMargins(0, 0, textGap, 0)
                     }
                 }
 
@@ -149,14 +155,14 @@ actual fun BannerAd(
                 // Call To Action Button ("INSTALL" / "GET")
                 val ctaDrawable = GradientDrawable().apply {
                     setColor(AndroidColor.parseColor("#FF007A")) // Neon Pink
-                    setCornerRadius(6f)
+                    setCornerRadius(6f * density)
                 }
                 val ctaView = TextView(context).apply {
                     textSize = 9f
                     setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
                     setTextColor(AndroidColor.WHITE)
                     background = ctaDrawable
-                    setPadding(12, 6, 12, 6)
+                    setPadding((10 * density).toInt(), (5 * density).toInt(), (10 * density).toInt(), (5 * density).toInt())
                     setSingleLine(true)
                     layoutParams = LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,

@@ -1,10 +1,10 @@
 package com.dirzaaulia.loottrack.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -23,24 +23,23 @@ actual fun BannerAd(
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .border(0.5.dp, CyanAccent.copy(alpha = 0.5f))
+            .fillMaxSize()
             .background(CyanAccent.copy(alpha = 0.08f))
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(12.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "SPONSORED ADVERTISEMENT",
-                fontSize = 8.sp,
+                fontSize = 9.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.5.sp,
                 color = CyanAccent
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "LOOTTRACK GAMING ENGINE SPONSOR",
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )

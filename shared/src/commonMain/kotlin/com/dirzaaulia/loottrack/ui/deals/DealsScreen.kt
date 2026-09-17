@@ -46,18 +46,17 @@ import com.dirzaaulia.loottrack.ui.components.AbstractCategoryBar
 import com.dirzaaulia.loottrack.ui.components.AbstractEditorialHeader
 import com.dirzaaulia.loottrack.ui.components.AbstractFloatingBottomBar
 import com.dirzaaulia.loottrack.ui.components.AbstractSearchBox
-import com.dirzaaulia.loottrack.ui.components.BannerAd
 import com.dirzaaulia.loottrack.ui.components.CurrencyBottomSheet
 import com.dirzaaulia.loottrack.ui.components.DesktopTopNavBar
 import com.dirzaaulia.loottrack.ui.components.FilterBottomSheet
 import com.dirzaaulia.loottrack.ui.components.GameDetailBottomSheet
 import com.dirzaaulia.loottrack.ui.components.GameDetailModal
 import com.dirzaaulia.loottrack.ui.components.PriceAlertBottomSheet
-import com.dirzaaulia.loottrack.ui.deals.components.AbstractFeaturedDropHero
 import com.dirzaaulia.loottrack.ui.deals.components.DesktopFilterSidebar
 import com.dirzaaulia.loottrack.ui.deals.components.FlashDealsCarousel
 import com.dirzaaulia.loottrack.ui.deals.components.GridDealAdCard
 import com.dirzaaulia.loottrack.ui.deals.components.GridDealCard
+import com.dirzaaulia.loottrack.ui.deals.components.HeroCarousel
 import com.dirzaaulia.loottrack.ui.deals.components.SavedAlertsWatchlist
 import com.dirzaaulia.loottrack.ui.info.InfoScreen
 import com.dirzaaulia.loottrack.viewmodel.DealsUiState
@@ -266,30 +265,25 @@ fun DealsScreen(
                                                         contentPadding = PaddingValues(
                                                             start = if (isWideScreen) 8.dp else 16.dp,
                                                             end = if (isWideScreen) 8.dp else 16.dp,
-                                                            bottom = if (isWideScreen) 20.dp else 140.dp
+                                                            bottom = if (isWideScreen) 140.dp else 140.dp
                                                         ),
                                                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                                                         verticalArrangement = Arrangement.spacedBy(14.dp)
                                                     ) {
-                                                        // Featured Hero Drop
+                                                        // Featured Hero Drop & Sponsored Ad Auto-Cycling Carousel
                                                         current.featuredDeal?.let { featured ->
                                                             item(span = { GridItemSpan(gridColumnCount) }) {
-                                                                AbstractFeaturedDropHero(
-                                                                    deal = featured,
+                                                                HeroCarousel(
+                                                                    featuredDeal = featured,
                                                                     formattedSalePrice = viewModel.formatPrice(featured.salePrice),
                                                                     formattedNormalPrice = viewModel.formatPrice(featured.normalPrice),
                                                                     isAlertSet = viewModel.isAlertSet(featured),
                                                                     onOpenAlertModal = { deal -> selectedAlertDeal = deal }
                                                                 )
                                                             }
-
-                                                            // Banner Ad near Hero Card
-                                                            item(span = { GridItemSpan(gridColumnCount) }) {
-                                                                BannerAd()
-                                                            }
                                                         }
 
-                                                        // Flash Deals Carousel Row (Contains inline FlashDealAdCard with matching card style)
+                                                        // Flash Deals Carousel Row (Contains inline FlashDealAdCard)
                                                         item(span = { GridItemSpan(gridColumnCount) }) {
                                                             FlashDealsCarousel(
                                                                 deals = current.deals,

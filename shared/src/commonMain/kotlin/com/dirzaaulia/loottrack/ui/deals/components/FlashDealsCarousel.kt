@@ -78,7 +78,7 @@ fun FlashDealsCarousel(
                     )
 
                     // Inline Flash Deal Ad Card following exact same card dimensions & design
-                    if (index == 2) {
+                    if (index == 2 && !com.dirzaaulia.loottrack.ui.components.isAdsDisabledGlobal) {
                         FlashDealAdCard()
                     }
                 }

@@ -35,7 +35,8 @@ sealed interface DealsUiState {
         val deals: List<CheapSharkDeal>,
         val featuredDeal: CheapSharkDeal? = null,
         val isLastPage: Boolean = false,
-        val isLoadingNextPage: Boolean = false
+        val isLoadingNextPage: Boolean = false,
+        val pageLoadError: String? = null
     ) : DealsUiState
     data class Error(val message: String) : DealsUiState
 }
@@ -45,6 +46,30 @@ class DealsViewModel(
     private val currencyApi: CurrencyApi,
     private val preferenceStorage: PreferenceStorage
 ) : ViewModel() {
+
+    // Play Store content compliance — filters deals whose titles contain adult/NSFW
+    // or controlled-substance keywords so the app can honestly answer "No" to all
+    // IARC content rating questions (Sexuality, Violence, Controlled Substance, Language).
+    private val blockedKeywords = setOf(
+        // Sexual / adult content
+        "hentai", "porn", "xxx", "eroge", "nsfw", "lewd", "ecchi", "nudity",
+        "18+", "adult only", "waifu", "oppai", "boobs", "uncensored", "dildo",
+        "masturbat", "stripper", "blowjob", "milf", "bitch",
+        // Drug / controlled substance references
+        "weed shop", "drug dealer", "cannabis", "cocaine", "meth simulator",
+        "stoner", "narco", "marijuana", "heroin"
+    )
+
+    private val blockedWordRegex = Regex("""(?i)\b(sex|nude|nudes|slut|whore|anal)\b""")
+
+    fun isBlockedContent(text: String): Boolean {
+        if (blockedKeywords.any { text.contains(it, ignoreCase = true) }) return true
+        if (blockedWordRegex.containsMatchIn(text)) return true
+        return false
+    }
+
+    private fun List<CheapSharkDeal>.filterSafeContent(): List<CheapSharkDeal> =
+        filter { deal -> !isBlockedContent(deal.title) }
 
     private val _uiState = MutableStateFlow<DealsUiState>(DealsUiState.Loading)
     val uiState: StateFlow<DealsUiState> = _uiState.asStateFlow()
@@ -68,6 +93,10 @@ class DealsViewModel(
     private val pagingSource = LootTrackPagingSource<CheapSharkDeal> { page ->
         val filter = _filterOptions.value
         val activeQuery = _searchQuery.value.ifBlank { null } ?: filter.queryTitle.ifBlank { null }
+
+        if (activeQuery != null && isBlockedContent(activeQuery)) {
+            return@LootTrackPagingSource emptyList()
+        }
 
         val lowerUsd = convertLocalPriceToUsd(filter.lowerPriceStr)?.toInt()
         val upperUsd = convertLocalPriceToUsd(filter.upperPriceStr)?.toInt()
@@ -166,7 +195,10 @@ class DealsViewModel(
     }
 
     suspend fun fetchGameDetails(gameId: String): CheapSharkGameDetail? {
-        return api.getGameDetails(gameId)
+        val details = api.getGameDetails(gameId) ?: return null
+        val title = details.info?.title.orEmpty()
+        if (isBlockedContent(title)) return null
+        return details
     }
 
     fun isAlertSet(deal: CheapSharkDeal): Boolean {
@@ -228,7 +260,7 @@ class DealsViewModel(
         viewModelScope.launch {
             try {
                 pagingSource.loadNextPage()
-                val deals = pagingSource.itemsFlow.value
+                val deals = pagingSource.itemsFlow.value.filterSafeContent()
                 val featured = deals.maxByOrNull { it.savings.toFloatOrNull() ?: 0f } ?: deals.firstOrNull()
 
                 _uiState.value = DealsUiState.Success(
@@ -248,16 +280,33 @@ class DealsViewModel(
     fun loadNextPage() {
         if (!pagingSource.isLastPage) {
             viewModelScope.launch {
-                pagingSource.loadNextPage()
-                val deals = pagingSource.itemsFlow.value
-                val featured = deals.maxByOrNull { it.savings.toFloatOrNull() ?: 0f } ?: deals.firstOrNull()
+                val currentState = _uiState.value
+                if (currentState is DealsUiState.Success) {
+                    if (currentState.isLoadingNextPage) return@launch
+                    _uiState.value = currentState.copy(isLoadingNextPage = true, pageLoadError = null)
+                }
 
-                _uiState.value = DealsUiState.Success(
-                    deals = deals,
-                    featuredDeal = featured,
-                    isLastPage = pagingSource.isLastPage,
-                    isLoadingNextPage = false
-                )
+                try {
+                    pagingSource.loadNextPage()
+                    val deals = pagingSource.itemsFlow.value.filterSafeContent()
+                    val featured = deals.maxByOrNull { it.savings.toFloatOrNull() ?: 0f } ?: deals.firstOrNull()
+
+                    _uiState.value = DealsUiState.Success(
+                        deals = deals,
+                        featuredDeal = featured,
+                        isLastPage = pagingSource.isLastPage,
+                        isLoadingNextPage = false,
+                        pageLoadError = null
+                    )
+                } catch (e: Exception) {
+                    val currentState = _uiState.value
+                    if (currentState is DealsUiState.Success) {
+                        _uiState.value = currentState.copy(
+                            isLoadingNextPage = false,
+                            pageLoadError = e.message ?: "UNABLE TO LOAD MORE DEALS"
+                        )
+                    }
+                }
             }
         }
     }

@@ -2,6 +2,7 @@ package com.dirzaaulia.loottrack.ui.deals
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -50,7 +51,6 @@ import com.dirzaaulia.loottrack.ui.components.CurrencyBottomSheet
 import com.dirzaaulia.loottrack.ui.components.DesktopTopNavBar
 import com.dirzaaulia.loottrack.ui.components.FilterBottomSheet
 import com.dirzaaulia.loottrack.ui.components.GameDetailBottomSheet
-import com.dirzaaulia.loottrack.ui.components.GameDetailModal
 import com.dirzaaulia.loottrack.ui.components.PriceAlertBottomSheet
 import com.dirzaaulia.loottrack.ui.deals.components.DesktopFilterSidebar
 import com.dirzaaulia.loottrack.ui.deals.components.FlashDealsCarousel
@@ -236,13 +236,47 @@ fun DealsScreen(
                                                     modifier = Modifier.fillMaxSize(),
                                                     contentAlignment = Alignment.Center
                                                 ) {
-                                                    Text(
-                                                        text = "UNABLE TO LOAD DEALS",
-                                                        color = MaterialTheme.colorScheme.error,
-                                                        fontSize = 12.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        letterSpacing = 1.sp
-                                                    )
+                                                    Column(
+                                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                                        verticalArrangement = Arrangement.Center,
+                                                        modifier = Modifier
+                                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f))
+                                                            .border(1.dp, NeonPinkPrimary)
+                                                            .padding(24.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "ERR // UNABLE TO LOAD DEALS ENGINE",
+                                                            color = NeonPinkPrimary,
+                                                            fontSize = 12.sp,
+                                                            fontWeight = FontWeight.Black,
+                                                            letterSpacing = 1.5.sp
+                                                        )
+                                                        Spacer(modifier = Modifier.height(8.dp))
+                                                        Text(
+                                                            text = current.message.uppercase(),
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            fontSize = 10.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                        Spacer(modifier = Modifier.height(16.dp))
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .border(1.dp, NeonPinkPrimary)
+                                                                .background(NeonPinkPrimary)
+                                                                .clickable {
+                                                                    viewModel.fetchDeals(resetPage = true)
+                                                                }
+                                                                .padding(horizontal = 20.dp, vertical = 10.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = "RETRY INITIAL LOAD",
+                                                                fontSize = 10.sp,
+                                                                fontWeight = FontWeight.Black,
+                                                                letterSpacing = 1.5.sp,
+                                                                color = Color.White
+                                                            )
+                                                        }
+                                                    }
                                                 }
                                             }
                                             is DealsUiState.Success -> {
@@ -347,14 +381,83 @@ fun DealsScreen(
                                                                 Box(
                                                                     modifier = Modifier
                                                                         .fillMaxWidth()
-                                                                        .padding(top = 12.dp, bottom = 24.dp),
+                                                                        .padding(top = 16.dp, bottom = if (isWideScreen) 24.dp else 24.dp),
                                                                     contentAlignment = Alignment.Center
                                                                 ) {
-                                                                    CircularProgressIndicator(
-                                                                        color = NeonPinkPrimary,
-                                                                        strokeWidth = 2.dp,
-                                                                        modifier = Modifier.size(24.dp)
-                                                                    )
+                                                                    Row(
+                                                                        verticalAlignment = Alignment.CenterVertically,
+                                                                        horizontalArrangement = Arrangement.Center,
+                                                                        modifier = Modifier
+                                                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
+                                                                            .border(1.dp, NeonPinkPrimary)
+                                                                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                                                                    ) {
+                                                                        CircularProgressIndicator(
+                                                                            color = NeonPinkPrimary,
+                                                                            strokeWidth = 2.dp,
+                                                                            modifier = Modifier.size(20.dp)
+                                                                        )
+                                                                        Spacer(modifier = Modifier.width(10.dp))
+                                                                        Text(
+                                                                            text = "FETCHING MORE DEALS...",
+                                                                            fontSize = 10.sp,
+                                                                            fontWeight = FontWeight.Black,
+                                                                            letterSpacing = 1.5.sp,
+                                                                            color = NeonPinkPrimary
+                                                                        )
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                        if (current.pageLoadError != null) {
+                                                            item(span = { GridItemSpan(gridColumnCount) }) {
+                                                                Box(
+                                                                    modifier = Modifier
+                                                                        .fillMaxWidth()
+                                                                        .padding(top = 16.dp, bottom = if (isWideScreen) 24.dp else 24.dp),
+                                                                    contentAlignment = Alignment.Center
+                                                                ) {
+                                                                    Column(
+                                                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                                                        verticalArrangement = Arrangement.Center,
+                                                                        modifier = Modifier
+                                                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f))
+                                                                            .border(1.dp, NeonPinkPrimary)
+                                                                            .padding(horizontal = 20.dp, vertical = 12.dp)
+                                                                    ) {
+                                                                        Text(
+                                                                            text = "ERR // FAILED TO LOAD MORE DEALS",
+                                                                            fontSize = 10.sp,
+                                                                            fontWeight = FontWeight.Black,
+                                                                            letterSpacing = 1.5.sp,
+                                                                            color = NeonPinkPrimary
+                                                                        )
+                                                                        Spacer(modifier = Modifier.height(4.dp))
+                                                                        Text(
+                                                                            text = current.pageLoadError.uppercase(),
+                                                                            fontSize = 9.sp,
+                                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                                        )
+                                                                        Spacer(modifier = Modifier.height(10.dp))
+                                                                        Box(
+                                                                            modifier = Modifier
+                                                                                .border(1.dp, NeonPinkPrimary)
+                                                                                .background(NeonPinkPrimary)
+                                                                                .clickable {
+                                                                                    viewModel.loadNextPage()
+                                                                                }
+                                                                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                                                        ) {
+                                                                            Text(
+                                                                                text = "RETRY LOAD MORE",
+                                                                                fontSize = 9.sp,
+                                                                                fontWeight = FontWeight.Black,
+                                                                                letterSpacing = 1.5.sp,
+                                                                                color = Color.White
+                                                                            )
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -412,7 +515,8 @@ fun DealsScreen(
                 onSelectCurrency = { currency ->
                     viewModel.selectCurrency(currency)
                 },
-                onDismiss = { showCurrencySheet = false }
+                onDismiss = { showCurrencySheet = false },
+                isSideSheet = isWideScreen
             )
         }
 
@@ -427,44 +531,29 @@ fun DealsScreen(
                 onResetFilter = {
                     viewModel.resetFilterOptions()
                 },
-                onDismiss = { showFilterSheet = false }
+                onDismiss = { showFilterSheet = false },
+                isSideSheet = isWideScreen
             )
         }
 
         selectedDetailDeal?.let { deal ->
-            if (isWideScreen) {
-                GameDetailModal(
-                    deal = deal,
-                    stores = stores,
-                    isAlertSet = viewModel.isAlertSet(deal),
-                    existingAlert = viewModel.getSavedAlert(deal),
-                    onFetchGameDetails = { gameId -> viewModel.fetchGameDetails(gameId) },
-                    formatPrice = { price -> viewModel.formatPrice(price) },
-                    onOpenAlertModal = { alertDeal ->
-                        openedFromDetailDeal = deal
-                        selectedDetailDeal = null
-                        selectedAlertDeal = alertDeal
-                    },
-                    onDismiss = { selectedDetailDeal = null }
-                )
-            } else {
-                GameDetailBottomSheet(
-                    deal = deal,
-                    stores = stores,
-                    isAlertSet = viewModel.isAlertSet(deal),
-                    existingAlert = viewModel.getSavedAlert(deal),
-                    onFetchGameDetails = { gameId ->
-                        viewModel.fetchGameDetails(gameId)
-                    },
-                    formatPrice = { price -> viewModel.formatPrice(price) },
-                    onOpenAlertModal = { alertDeal ->
-                        openedFromDetailDeal = deal
-                        selectedDetailDeal = null
-                        selectedAlertDeal = alertDeal
-                    },
-                    onDismiss = { selectedDetailDeal = null }
-                )
-            }
+            GameDetailBottomSheet(
+                deal = deal,
+                stores = stores,
+                isAlertSet = viewModel.isAlertSet(deal),
+                existingAlert = viewModel.getSavedAlert(deal),
+                onFetchGameDetails = { gameId ->
+                    viewModel.fetchGameDetails(gameId)
+                },
+                formatPrice = { price -> viewModel.formatPrice(price) },
+                onOpenAlertModal = { alertDeal ->
+                    openedFromDetailDeal = deal
+                    selectedDetailDeal = null
+                    selectedAlertDeal = alertDeal
+                },
+                onDismiss = { selectedDetailDeal = null },
+                isSideSheet = isWideScreen
+            )
         }
 
         selectedAlertDeal?.let { deal ->
@@ -492,7 +581,8 @@ fun DealsScreen(
                 onDismiss = {
                     selectedAlertDeal = null
                     openedFromDetailDeal = null
-                }
+                },
+                isSideSheet = isWideScreen
             )
         }
     }

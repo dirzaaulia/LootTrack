@@ -1,11 +1,14 @@
 package com.dirzaaulia.loottrack.ui.components
 
+import android.R
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.graphics.Color as AndroidColor
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Handler
+import android.os.Looper
 import android.text.TextUtils
 import android.util.Log
 import android.view.Gravity
@@ -27,58 +30,139 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.viewinterop.AndroidView
-import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdLoader
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.nativead.MediaView
-import com.google.android.gms.ads.nativead.NativeAd
-import com.google.android.gms.ads.nativead.NativeAdOptions
-import com.google.android.gms.ads.nativead.NativeAdView
+import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
+import com.google.android.libraries.ads.mobile.sdk.nativead.MediaView
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAd
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdEventCallback
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdLoader
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdLoaderCallback
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdRequest
+import com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdView
+import java.util.concurrent.ConcurrentLinkedQueue
 
 private const val TAG = "LootTrackAdMob"
+private const val ONE_HOUR_MS = 3600_000L // AdMob policy: Pre-cached ads expire after 1 hour
+private const val MAX_CACHE_SIZE = 5       // AdMob policy: Maximum 5 preloaded ads in cache pool
 
-class NativeAdLoader(
-    private val context: Context,
-    private val adUnitId: String,
-    private val onNativeAdLoaded: (NativeAd) -> Unit,
-    private val onAdFailed: (LoadAdError) -> Unit = {}
-) {
-    private var adLoader: AdLoader? = null
+/**
+ * Next-Gen AdMob Native Ad Preloader & Cache Manager for LootTrack.
+ * Adheres strictly to Google AdMob Guidelines, Policies & Best Practices:
+ * 1. Maximum Cache Limit: Caps preloaded ads at 5 maximum to prevent over-fetching.
+ * 2. 1-Hour Expiration: Automatically purges and destroys cached ads older than 1 hour.
+ * 3. Single-flight Requests: Prevents duplicate simultaneous network requests via volatile flag.
+ * 4. Thread Safety: Handles thread-safe queueing and dispatches UI callbacks to the Main Thread.
+ * 5. Lifecycle Destruction: Invokes nativeAd.destroy() on expired, discarded, or disposed ads.
+ */
+object NativeAdPreloader {
 
-    @SuppressLint("MissingPermission")
-    fun loadAd() {
-        val adOptions = NativeAdOptions.Builder()
-            .setAdChoicesPlacement(NativeAdOptions.ADCHOICES_TOP_RIGHT)
-            .build()
+    private data class CachedNativeAd(
+        val nativeAd: NativeAd,
+        val timestamp: Long = System.currentTimeMillis()
+    )
 
-        adLoader = AdLoader.Builder(context, adUnitId)
-            .withNativeAdOptions(adOptions)
-            .forNativeAd { ad ->
-                Log.d(TAG, "NativeAdLoader SUCCESS // Headline: ${ad.headline}, Advertiser: ${ad.advertiser}")
-                onNativeAdLoaded(ad)
+    private val adCache = ConcurrentLinkedQueue<CachedNativeAd>()
+    @Volatile private var isPreloading = false
+
+    fun preload(context: Context, adUnitId: String, desiredCacheSize: Int = 3) {
+        val targetSize = desiredCacheSize.coerceAtMost(MAX_CACHE_SIZE)
+        if (isPreloading || adCache.size >= targetSize) return
+
+        cleanExpiredAds()
+
+        if (adCache.size >= targetSize) return
+
+        isPreloading = true
+        val adRequest = NativeAdRequest.Builder(
+            adUnitId,
+            listOf(NativeAd.NativeAdType.NATIVE)
+        ).build()
+
+        NativeAdLoader.load(
+            adRequest,
+            object : NativeAdLoaderCallback {
+                override fun onNativeAdLoaded(nativeAd: NativeAd) {
+                    Log.d(TAG, "Next-Gen Preloader // Preloaded NativeAd successfully. Current cache size: ${adCache.size + 1}/$MAX_CACHE_SIZE")
+                    adCache.offer(CachedNativeAd(nativeAd))
+                    isPreloading = false
+
+                    if (adCache.size < targetSize) {
+                        preload(context, adUnitId, targetSize)
+                    }
+                }
+
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    Log.e(TAG, "Next-Gen Preloader ERR // Code: ${adError.code}, Msg: ${adError.message}")
+                    isPreloading = false
+                }
             }
-            .withAdListener(object : AdListener() {
-                override fun onAdLoaded() {
-                    Log.d(TAG, "NativeAdLoader.onAdLoaded triggered.")
+        )
+    }
+
+    fun pollOrLoadAd(
+        context: Context,
+        adUnitId: String,
+        onAdReady: (NativeAd) -> Unit,
+        onAdFailed: (LoadAdError) -> Unit = {}
+    ) {
+        cleanExpiredAds()
+
+        val cached = adCache.poll()
+        if (cached != null) {
+            Log.d(TAG, "Next-Gen Preloader // Serving preloaded NativeAd from cache. Remaining: ${adCache.size}")
+            onAdReady(cached.nativeAd)
+            preload(context, adUnitId)
+            return
+        }
+
+        Log.d(TAG, "Next-Gen Preloader // Cache empty. Fetching fresh NativeAd...")
+        val adRequest = NativeAdRequest.Builder(
+            adUnitId,
+            listOf(NativeAd.NativeAdType.NATIVE)
+        ).build()
+
+        NativeAdLoader.load(
+            adRequest,
+            object : NativeAdLoaderCallback {
+                override fun onNativeAdLoaded(nativeAd: NativeAd) {
+                    Log.d(TAG, "Next-Gen NativeAdLoaded SUCCESS // Headline: ${nativeAd.headline}")
+                    onAdReady(nativeAd)
+                    preload(context, adUnitId)
                 }
 
-                override fun onAdFailedToLoad(error: LoadAdError) {
-                    Log.e(TAG, "NativeAdLoader ERR // Code: ${error.code}, Msg: ${error.message}, Domain: ${error.domain}")
-                    onAdFailed(error)
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    Log.e(TAG, "Next-Gen NativeAd ERR // Code: ${adError.code}, Msg: ${adError.message}")
+                    onAdFailed(adError)
                 }
+            }
+        )
+    }
 
-                override fun onAdImpression() {
-                    Log.d(TAG, "NativeAdLoader // Impression recorded!")
+    private fun cleanExpiredAds() {
+        val now = System.currentTimeMillis()
+        val iterator = adCache.iterator()
+        while (iterator.hasNext()) {
+            val cached = iterator.next()
+            if (now - cached.timestamp > ONE_HOUR_MS) {
+                try {
+                    cached.nativeAd.destroy()
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error destroying expired ad", e)
                 }
+                iterator.remove()
+                Log.d(TAG, "Next-Gen Preloader // Expired ad (>1h) destroyed and purged from cache.")
+            }
+        }
+    }
 
-                override fun onAdClicked() {
-                    Log.d(TAG, "NativeAdLoader // Click recorded!")
-                }
-            })
-            .build()
-
-        adLoader?.loadAd(AdRequest.Builder().build())
+    fun clear() {
+        while (true) {
+            val cached = adCache.poll() ?: break
+            try {
+                cached.nativeAd.destroy()
+            } catch (e: Exception) {
+                Log.w(TAG, "Error clearing cached ad", e)
+            }
+        }
     }
 }
 
@@ -87,7 +171,13 @@ class NativeAdLoader(
 actual fun BannerAd(
     modifier: Modifier
 ) {
+    if (isAdsDisabledGlobal) {
+        Box(modifier = modifier)
+        return
+    }
+
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -132,16 +222,26 @@ actual fun BannerAd(
                     )
                 }
 
-                // 1. MediaView (Artwork - CENTER_CROP fills 100% of the given card area)
+                // 1. MediaView (fills 100% space with CENTER_CROP to maintain aspect ratio)
                 val mediaView = MediaView(context).apply {
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    setImageScaleType(ImageView.ScaleType.CENTER_CROP)
+                    ).apply {
+                        gravity = Gravity.CENTER
+                    }
+                    setOnHierarchyChangeListener(object : ViewGroup.OnHierarchyChangeListener {
+                        override fun onChildViewAdded(parent: View?, child: View?) {
+                            if (child is ImageView) {
+                                child.scaleType = ImageView.ScaleType.CENTER_CROP
+                                child.adjustViewBounds = true
+                            }
+                        }
+
+                        override fun onChildViewRemoved(parent: View?, child: View?) {}
+                    })
                 }
                 rootLayout.addView(mediaView)
-                nativeAdView.mediaView = mediaView
 
                 // 2. Cyberpunk Ad Attribution Badge ("AD")
                 val badgeDrawable = GradientDrawable().apply {
@@ -198,7 +298,6 @@ actual fun BannerAd(
                     ellipsize = TextUtils.TruncateAt.END
                 }
                 textColumn.addView(headlineView)
-                nativeAdView.headlineView = headlineView
 
                 val bodyView = TextView(context).apply {
                     textSize = 9f
@@ -207,7 +306,6 @@ actual fun BannerAd(
                     ellipsize = TextUtils.TruncateAt.END
                 }
                 textColumn.addView(bodyView)
-                nativeAdView.bodyView = bodyView
 
                 bottomRow.addView(textColumn)
 
@@ -229,54 +327,82 @@ actual fun BannerAd(
                     )
                 }
                 bottomRow.addView(ctaView)
-                nativeAdView.callToActionView = ctaView
 
                 rootLayout.addView(bottomRow)
                 nativeAdView.addView(rootLayout)
 
-                val loader = NativeAdLoader(
+                nativeAdView.headlineView = headlineView
+                nativeAdView.bodyView = bodyView
+                nativeAdView.callToActionView = ctaView
+
+                // Request or poll preloaded Native Ad from Next-Gen Preloader
+                NativeAdPreloader.pollOrLoadAd(
                     context = context,
                     adUnitId = activeAdUnitId,
-                    onNativeAdLoaded = { ad ->
-                        nativeAd?.destroy()
-                        nativeAd = ad
+                    onAdReady = { ad ->
+                        // Dispatch UI updates to Main Thread
+                        mainHandler.post {
+                            nativeAd?.destroy()
+                            nativeAd = ad
 
-                        // 1. Headline
-                        if (ad.headline.isNullOrEmpty()) {
-                            headlineView.visibility = View.GONE
-                        } else {
-                            headlineView.visibility = View.VISIBLE
-                            headlineView.text = ad.headline
+                            ad.adEventCallback = object : NativeAdEventCallback {
+                                override fun onAdImpression() {
+                                    Log.d(TAG, "Next-Gen NativeAd // Impression recorded!")
+                                }
+
+                                override fun onAdClicked() {
+                                    Log.d(TAG, "Next-Gen NativeAd // Click recorded!")
+                                }
+                            }
+
+                            // 1. Headline
+                            if (ad.headline.isNullOrEmpty()) {
+                                headlineView.visibility = View.GONE
+                            } else {
+                                headlineView.visibility = View.VISIBLE
+                                headlineView.text = ad.headline
+                            }
+
+                            // 2. Body / Advertiser
+                            val bodyText = ad.body ?: ad.advertiser
+                            if (bodyText.isNullOrEmpty()) {
+                                bodyView.visibility = View.GONE
+                            } else {
+                                bodyView.visibility = View.VISIBLE
+                                bodyView.text = bodyText
+                            }
+
+                            // 3. Call to Action
+                            if (ad.callToAction.isNullOrEmpty()) {
+                                ctaView.visibility = View.GONE
+                            } else {
+                                ctaView.visibility = View.VISIBLE
+                                ctaView.text = ad.callToAction?.uppercase()
+                            }
+
+                            // Register NativeAd with NativeAdView in Next-Gen SDK
+                            try {
+                                nativeAdView.registerNativeAd(ad, mediaView)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Failed to register native ad", e)
+                            }
                         }
-
-                        // 2. Body / Advertiser
-                        val bodyText = ad.body ?: ad.advertiser
-                        if (bodyText.isNullOrEmpty()) {
-                            bodyView.visibility = View.GONE
-                        } else {
-                            bodyView.visibility = View.VISIBLE
-                            bodyView.text = bodyText
-                        }
-
-                        // 3. Call to Action
-                        if (ad.callToAction.isNullOrEmpty()) {
-                            ctaView.visibility = View.GONE
-                        } else {
-                            ctaView.visibility = View.VISIBLE
-                            ctaView.text = ad.callToAction?.uppercase()
-                        }
-
-                        // Set NativeAd on NativeAdView AFTER populating assets
-                        nativeAdView.setNativeAd(ad)
+                    },
+                    onAdFailed = { error ->
+                        Log.e(TAG, "Failed to load Next-Gen NativeAd: ${error.message}")
                     }
                 )
-                loader.loadAd()
 
                 nativeAdView
             },
             update = { nativeAdView ->
                 nativeAd?.let { ad ->
-                    nativeAdView.setNativeAd(ad)
+                    val mediaView = nativeAdView.findViewById<MediaView>(R.id.custom) ?: return@let
+                    try {
+                        nativeAdView.registerNativeAd(ad, mediaView)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to register native ad on update", e)
+                    }
                 }
             }
         )

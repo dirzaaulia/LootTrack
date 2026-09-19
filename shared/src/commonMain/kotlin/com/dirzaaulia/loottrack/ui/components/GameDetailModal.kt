@@ -57,7 +57,57 @@ fun GameDetailModal(
     onOpenAlertModal: (CheapSharkDeal) -> Unit,
     onDismiss: () -> Unit,
     isAlertSet: Boolean = false,
-    existingAlert: SavedAlert? = null
+    existingAlert: SavedAlert? = null,
+    isSideSheet: Boolean = true
+) {
+    if (isSideSheet) {
+        ModalSideSheet(onDismissRequest = onDismiss) {
+            GameDetailModalContent(
+                deal = deal,
+                stores = stores,
+                onFetchGameDetails = onFetchGameDetails,
+                formatPrice = formatPrice,
+                onOpenAlertModal = onOpenAlertModal,
+                onDismiss = onDismiss,
+                isAlertSet = isAlertSet,
+                existingAlert = existingAlert
+            )
+        }
+    } else {
+        Dialog(onDismissRequest = onDismiss) {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RectangleShape,
+                border = BorderStroke(1.dp, NeonPinkPrimary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                GameDetailModalContent(
+                    deal = deal,
+                    stores = stores,
+                    onFetchGameDetails = onFetchGameDetails,
+                    formatPrice = formatPrice,
+                    onOpenAlertModal = onOpenAlertModal,
+                    onDismiss = onDismiss,
+                    isAlertSet = isAlertSet,
+                    existingAlert = existingAlert
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GameDetailModalContent(
+    deal: CheapSharkDeal,
+    stores: List<CheapSharkStore>,
+    onFetchGameDetails: suspend (String) -> CheapSharkGameDetail?,
+    formatPrice: (String) -> String,
+    onOpenAlertModal: (CheapSharkDeal) -> Unit,
+    onDismiss: () -> Unit,
+    isAlertSet: Boolean,
+    existingAlert: SavedAlert?
 ) {
     var gameDetail by remember { mutableStateOf<CheapSharkGameDetail?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -70,296 +120,285 @@ fun GameDetailModal(
         isLoading = false
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            color = MaterialTheme.colorScheme.surface,
-            shape = RectangleShape,
-            border = BorderStroke(1.dp, NeonPinkPrimary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp)
+    ) {
+        // Modal Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
+            Column {
+                Text(
+                    text = "GAME PRICE TRACKER",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "HISTORICAL LOWS & STORE COMPARISON",
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.5.sp,
+                    color = NeonPinkPrimary
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .border(1.dp, NeonPinkPrimary)
+                    .clickable(onClick = onDismiss)
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text("CLOSE", fontSize = 9.sp, fontWeight = FontWeight.Black, color = NeonPinkPrimary)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (isLoading) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .height(180.dp),
+                contentAlignment = Alignment.Center
             ) {
-                // Modal Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "GAME PRICE TRACKER",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 2.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "HISTORICAL LOWS & STORE COMPARISON",
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp,
-                            color = NeonPinkPrimary
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .border(1.dp, NeonPinkPrimary)
-                            .clickable(onClick = onDismiss)
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text("CLOSE", fontSize = 9.sp, fontWeight = FontWeight.Black, color = NeonPinkPrimary)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = NeonPinkPrimary, strokeWidth = 2.dp, modifier = Modifier.size(32.dp))
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        // Game Cover & Title
-                        item {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(72.dp)
-                                        .border(1.dp, if (isAlertSet) CyanAccent else NeonPinkPrimary)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                                ) {
-                                    AsyncImage(
-                                        model = deal.thumb,
-                                        contentDescription = deal.title,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(14.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = deal.title.uppercase(),
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Black,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "CURRENT: ${formatPrice(deal.salePrice)} (WAS ${formatPrice(deal.normalPrice)})",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = NeonPinkPrimary
-                                    )
-                                }
-                            }
-                        }
-
-                        // Active Price Alert Status Banner (if alert already set)
-                        if (existingAlert != null || isAlertSet) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .border(1.dp, CyanAccent)
-                                        .background(CyanAccent.copy(alpha = 0.12f))
-                                        .padding(12.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = "🔔 PRICE ALERT ACTIVE FOR THIS GAME",
-                                                fontSize = 9.sp,
-                                                fontWeight = FontWeight.Black,
-                                                letterSpacing = 1.2.sp,
-                                                color = CyanAccent
-                                            )
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            val priceLabel = existingAlert?.let { formatPrice(it.targetPriceUsd) } ?: formatPrice(deal.salePrice)
-                                            Text(
-                                                text = "TARGET NOTIFY PRICE: $priceLabel",
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Black,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                        }
-
-                                        Box(
-                                            modifier = Modifier
-                                                .border(1.dp, CyanAccent)
-                                                .background(CyanAccent)
-                                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                        ) {
-                                            Text(
-                                                text = "ALERT SET",
-                                                fontSize = 9.sp,
-                                                fontWeight = FontWeight.Black,
-                                                color = Color.Black
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // Historical All-Time Lowest Price Block
-                        gameDetail?.cheapestPriceEver?.let { cheapest ->
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .border(1.dp, ElectricPurpleSecondary)
-                                        .background(ElectricPurpleSecondary.copy(alpha = 0.12f))
-                                        .padding(12.dp)
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = "🏆 ALL-TIME HISTORICAL CHEAPEST PRICE",
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Black,
-                                            letterSpacing = 1.5.sp,
-                                            color = ElectricPurpleSecondary
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = formatPrice(cheapest.price),
-                                                fontSize = 20.sp,
-                                                fontWeight = FontWeight.Black,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                            val isRecord = deal.salePrice.toDoubleOrNull() != null &&
-                                                    cheapest.price.toDoubleOrNull() != null &&
-                                                    deal.salePrice.toDouble() <= cheapest.price.toDouble()
-
-                                            if (isRecord) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .border(1.dp, NeonPinkPrimary)
-                                                        .background(NeonPinkPrimary)
-                                                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                                                ) {
-                                                    Text(
-                                                        text = "MATCHES ALL-TIME LOW!",
-                                                        fontSize = 9.sp,
-                                                        fontWeight = FontWeight.Black,
-                                                        color = Color.White
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // Store Deals Comparison Header
-                        item {
-                            Text(
-                                text = "STORE COMPARISON (${gameDetail?.deals?.size ?: 0} STORES)",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 1.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                CircularProgressIndicator(color = NeonPinkPrimary, strokeWidth = 2.dp, modifier = Modifier.size(32.dp))
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // Game Cover & Title
+                item {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .border(1.dp, if (isAlertSet) CyanAccent else NeonPinkPrimary)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            AsyncImage(
+                                model = deal.thumb,
+                                contentDescription = deal.title,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
                             )
                         }
 
-                        // Store Deals List
-                        gameDetail?.deals?.let { dealList ->
-                            items(dealList) { storeDeal ->
-                                val storeName = stores.firstOrNull { it.storeId == storeDeal.storeId }?.storeName ?: "Store #${storeDeal.storeId}"
-                                val dealUrl = "https://www.cheapshark.com/redirect?dealID=${storeDeal.dealId}"
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = deal.title.uppercase(),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "CURRENT: ${formatPrice(deal.salePrice)} (WAS ${formatPrice(deal.normalPrice)})",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = NeonPinkPrimary
+                            )
+                        }
+                    }
+                }
+
+                // Active Price Alert Status Banner (if alert already set)
+                if (existingAlert != null || isAlertSet) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, CyanAccent)
+                                .background(CyanAccent.copy(alpha = 0.12f))
+                                .padding(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "🔔 PRICE ALERT ACTIVE FOR THIS GAME",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 1.2.sp,
+                                        color = CyanAccent
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    val priceLabel = existingAlert?.let { formatPrice(it.targetPriceUsd) } ?: formatPrice(deal.salePrice)
+                                    Text(
+                                        text = "TARGET NOTIFY PRICE: $priceLabel",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
 
                                 Box(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .border(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
-                                        .clickable { openUrl(dealUrl) }
-                                        .padding(10.dp)
+                                        .border(1.dp, CyanAccent)
+                                        .background(CyanAccent)
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column {
-                                            Text(storeName.uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                                            Text("Savings: ${storeDeal.savings.substringBefore(".")}%", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
+                                    Text(
+                                        text = "ALERT SET",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.Black
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
 
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(formatPrice(storeDeal.price), fontSize = 15.sp, fontWeight = FontWeight.Black, color = NeonPinkPrimary)
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(formatPrice(storeDeal.retailPrice), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, textDecoration = TextDecoration.LineThrough)
+                // Historical All-Time Lowest Price Block
+                gameDetail?.cheapestPriceEver?.let { cheapest ->
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, ElectricPurpleSecondary)
+                                .background(ElectricPurpleSecondary.copy(alpha = 0.12f))
+                                .padding(12.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "🏆 ALL-TIME HISTORICAL CHEAPEST PRICE",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.5.sp,
+                                    color = ElectricPurpleSecondary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = formatPrice(cheapest.price),
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    val isRecord = deal.salePrice.toDoubleOrNull() != null &&
+                                            cheapest.price.toDoubleOrNull() != null &&
+                                            deal.salePrice.toDouble() <= cheapest.price.toDouble()
+
+                                    if (isRecord) {
+                                        Box(
+                                            modifier = Modifier
+                                                .border(1.dp, NeonPinkPrimary)
+                                                .background(NeonPinkPrimary)
+                                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                                        ) {
+                                            Text(
+                                                text = "MATCHES ALL-TIME LOW!",
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = Color.White
+                                            )
                                         }
                                     }
                                 }
                             }
                         }
+                    }
+                }
 
-                        // Action Buttons
-                        item {
+                // Store Deals Comparison Header
+                item {
+                    Text(
+                        text = "STORE COMPARISON (${gameDetail?.deals?.size ?: 0} STORES)",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Store Deals List
+                gameDetail?.deals?.let { dealList ->
+                    items(dealList) { storeDeal ->
+                        val storeName = stores.firstOrNull { it.storeId == storeDeal.storeId }?.storeName ?: "Store #${storeDeal.storeId}"
+                        val dealUrl = "https://www.cheapshark.com/redirect?dealID=${storeDeal.dealId}"
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                                .clickable { openUrl(dealUrl) }
+                                .padding(10.dp)
+                        ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                if (!isAlertSet) {
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .border(1.dp, NeonPinkPrimary)
-                                            .clickable {
-                                                onDismiss()
-                                                onOpenAlertModal(deal)
-                                            }
-                                            .padding(vertical = 10.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text("SET PRICE ALERT", fontSize = 10.sp, fontWeight = FontWeight.Black, color = NeonPinkPrimary)
-                                    }
+                                Column {
+                                    Text(storeName.uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Savings: ${storeDeal.savings.substringBefore(".")}%", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
 
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .border(1.dp, NeonPinkPrimary)
-                                        .background(NeonPinkPrimary)
-                                        .clickable {
-                                            openUrl("https://www.cheapshark.com/redirect?dealID=${deal.dealId}")
-                                        }
-                                        .padding(vertical = 10.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("CLAIM DEAL", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(formatPrice(storeDeal.price), fontSize = 15.sp, fontWeight = FontWeight.Black, color = NeonPinkPrimary)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(formatPrice(storeDeal.retailPrice), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, textDecoration = TextDecoration.LineThrough)
                                 }
                             }
+                        }
+                    }
+                }
+
+                // Action Buttons
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        if (!isAlertSet) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .border(1.dp, NeonPinkPrimary)
+                                    .clickable {
+                                        onDismiss()
+                                        onOpenAlertModal(deal)
+                                    }
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("SET PRICE ALERT", fontSize = 10.sp, fontWeight = FontWeight.Black, color = NeonPinkPrimary)
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .border(1.dp, NeonPinkPrimary)
+                                .background(NeonPinkPrimary)
+                                .clickable {
+                                    openUrl("https://www.cheapshark.com/redirect?dealID=${deal.dealId}")
+                                }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("CLAIM DEAL", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White)
                         }
                     }
                 }

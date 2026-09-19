@@ -1,0 +1,8 @@
+🎮 Welcome to LootTrack v1.0.0!
+
+• Browse real-time PC game deals across 30+ digital stores
+• Set target price alerts — get email notifications when prices drop
+• View deals in your local currency (USD, IDR, EUR, GBP, JPY, SGD, MYR, AUD, CAD)
+• Filter by store, Metacritic score, Steam rating, price range, and more
+• Manage your personal watchlist of tracked games
+• Dark and light theme support

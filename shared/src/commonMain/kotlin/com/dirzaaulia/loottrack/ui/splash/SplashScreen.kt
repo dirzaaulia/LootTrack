@@ -53,15 +53,23 @@ private val SplashBackgroundColor = Color(0xFF050508)
 @Composable
 fun SplashScreen(
     modifier: Modifier = Modifier,
+    isDataReady: Boolean = true,
     onSplashFinished: () -> Unit
 ) {
     var isVisible by remember { mutableStateOf(true) }
+    var minDurationPassed by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(1800L)
-        isVisible = false
-        delay(350L) // Delay for fadeOut animation
-        onSplashFinished()
+        delay(1200L) // Ensure minimum display time
+        minDurationPassed = true
+    }
+
+    LaunchedEffect(minDurationPassed, isDataReady) {
+        if (minDurationPassed && isDataReady) {
+            isVisible = false
+            delay(350L) // Delay for fadeOut animation
+            onSplashFinished()
+        }
     }
 
     val infiniteTransition = rememberInfiniteTransition()

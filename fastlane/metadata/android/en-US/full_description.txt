@@ -1,0 +1,66 @@
+🎮 LOOTTRACK — YOUR ULTIMATE PC GAME DEALS ENGINE
+
+Never overpay for a PC game again. LootTrack scans deals across 30+ digital game stores in real time, compares prices, shows you historical lows, and lets you set price drop alerts — all displayed in your local currency.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+🔥 CORE FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 REAL-TIME DEAL DISCOVERY
+Browse thousands of PC game deals sourced live from CheapShark, one of the most trusted game deal aggregators. Deals are sorted by Deal Rating, price range, Metacritic score, Steam rating, and more.
+
+💰 MULTI-CURRENCY SUPPORT
+View all prices in your local currency. LootTrack supports 9 currencies including USD, IDR, EUR, GBP, JPY, SGD, MYR, AUD, and CAD — powered by live exchange rates updated daily.
+
+🔔 PRICE DROP ALERTS
+Set a target price for any game and get notified by email the moment the price drops to or below your target. Never miss a flash sale on a game you've been watching.
+
+📋 PERSONAL WATCHLIST
+Save games you're tracking into your personal watchlist. View all your active alerts in one place and delete them when no longer needed.
+
+📊 DEAL DETAILS & HISTORY
+Tap any deal to view the game's full detail sheet — including current sale price, normal price, savings percentage, Deal Rating, Metacritic score, and Steam rating.
+
+🏪 STORE FILTER
+Filter deals by a specific digital storefront (Steam, Humble Store, Fanatical, GOG, and 25+ more) so you only see deals from the stores you actually use.
+
+🔃 ADVANCED FILTERS
+Customize your deal feed with powerful filter options:
+• Sort by Deal Rating, Price, Savings, or Title
+• Set minimum Metacritic or Steam rating thresholds
+• Filter to on-sale-only deals
+• Search by game title
+
+🌗 DARK & LIGHT THEME
+Switch between a sleek dark mode and a clean light mode. Your eyes will thank you for late-night deal hunting.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+📡 DATA SOURCES
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+• CheapShark API — Game deal aggregation across 30+ PC digital stores
+• FawazAhmed Currency API — Real-time exchange rate conversion
+
+LootTrack is 100% free. It is supported by non-intrusive ads.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+🔒 PRIVACY & PERMISSIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LootTrack only requires:
+• Internet — to fetch live deals and exchange rates
+• Notifications — to deliver price drop alerts (optional, you can decline)
+
+No account required to browse deals. An email address is only needed when setting a price alert.
+
+Privacy Policy: https://lt.dirzaaulia.com/privacy
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+👨‍💻 ABOUT THE DEVELOPER
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Built with ❤️ by Dirza Aulia — an indie developer passionate about tools for gamers.
+
+Website: dirzaaulia.com
+Support via Ko-fi: ko-fi.com/dirzaaulia
+GitHub: github.com/dirzaaulia

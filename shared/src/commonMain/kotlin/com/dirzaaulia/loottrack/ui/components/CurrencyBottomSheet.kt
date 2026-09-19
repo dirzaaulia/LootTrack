@@ -40,141 +40,175 @@ fun CurrencyBottomSheet(
     selectedCurrency: AppCurrency,
     onSelectCurrency: (AppCurrency) -> Unit,
     onDismiss: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState()
+    sheetState: SheetState = rememberModalBottomSheetState(),
+    isSideSheet: Boolean = false
 ) {
     val coroutineScope = rememberCoroutineScope()
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
-        shape = RectangleShape
+    val onCloseAction: () -> Unit = {
+        if (!isSideSheet) {
+            coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+        } else {
+            onDismiss()
+        }
+    }
+
+    val onSelectAction: (AppCurrency) -> Unit = { currency ->
+        onSelectCurrency(currency)
+        if (!isSideSheet) {
+            coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+        } else {
+            onDismiss()
+        }
+    }
+
+    if (isSideSheet) {
+        ModalSideSheet(onDismissRequest = onDismiss) {
+            CurrencySheetContent(
+                selectedCurrency = selectedCurrency,
+                onSelectCurrency = onSelectAction,
+                onClose = onCloseAction
+            )
+        }
+    } else {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RectangleShape
+        ) {
+            CurrencySheetContent(
+                selectedCurrency = selectedCurrency,
+                onSelectCurrency = onSelectAction,
+                onClose = onCloseAction
+            )
+        }
+    }
+}
+
+@Composable
+private fun CurrencySheetContent(
+    selectedCurrency: AppCurrency,
+    onSelectCurrency: (AppCurrency) -> Unit,
+    onClose: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 32.dp)
     ) {
-        Column(
+        // Sheet Header
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 32.dp)
+                .border(
+                    width = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                )
+                .padding(horizontal = 20.dp, vertical = 14.dp)
         ) {
-            // Sheet Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        width = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
-                    )
-                    .padding(horizontal = 20.dp, vertical = 14.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "SELECT CURRENCY",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 2.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "REAL-TIME CONVERSION RATES",
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp,
-                            color = NeonPinkPrimary
-                        )
-                    }
+                Column {
+                    Text(
+                        text = "SELECT CURRENCY",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "REAL-TIME CONVERSION RATES",
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.5.sp,
+                        color = NeonPinkPrimary
+                    )
+                }
 
-                    Box(
-                        modifier = Modifier
-                            .border(1.dp, NeonPinkPrimary)
-                            .clickable {
-                                coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
-                            }
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "CLOSE",
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp,
-                            color = NeonPinkPrimary
-                        )
-                    }
+                Box(
+                    modifier = Modifier
+                        .border(1.dp, NeonPinkPrimary)
+                        .clickable(onClick = onClose)
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "CLOSE",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp,
+                        color = NeonPinkPrimary
+                    )
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-            // Currency List
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(AppCurrency.entries, key = { it.code }) { currency ->
-                    val isSelected = currency.code == selectedCurrency.code
+        // Currency List
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(AppCurrency.entries, key = { it.code }) { currency ->
+                val isSelected = currency.code == selectedCurrency.code
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                width = if (isSelected) 1.dp else 0.5.dp,
-                                color = if (isSelected) NeonPinkPrimary else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
-                            )
-                            .background(
-                                if (isSelected) NeonPinkPrimary.copy(alpha = 0.12f) else Color.Transparent
-                            )
-                            .clickable {
-                                onSelectCurrency(currency)
-                                coroutineScope.launch {
-                                    sheetState.hide()
-                                }.invokeOnCompletion {
-                                    onDismiss()
-                                }
-                            }
-                            .padding(horizontal = 20.dp, vertical = 14.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = if (isSelected) 1.dp else 0.5.dp,
+                            color = if (isSelected) NeonPinkPrimary else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                        )
+                        .background(
+                            if (isSelected) NeonPinkPrimary.copy(alpha = 0.12f) else Color.Transparent
+                        )
+                        .clickable {
+                            onSelectCurrency(currency)
+                        }
+                        .padding(horizontal = 20.dp, vertical = 14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(12.dp)
-                                        .border(1.dp, if (isSelected) NeonPinkPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
-                                        .background(if (isSelected) NeonPinkPrimary else Color.Transparent)
-                                )
-                                Spacer(modifier = Modifier.width(14.dp))
-                                Column {
-                                    Text(
-                                        text = currency.label,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 1.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = currency.currencyName.uppercase(),
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        letterSpacing = 1.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-
-                            if (isSelected) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .border(1.dp, if (isSelected) NeonPinkPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                                    .background(if (isSelected) NeonPinkPrimary else Color.Transparent)
+                            )
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column {
                                 Text(
-                                    text = "ACTIVE",
+                                    text = currency.label,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = currency.currencyName.uppercase(),
                                     fontSize = 9.sp,
-                                    fontWeight = FontWeight.Black,
-                                    letterSpacing = 1.5.sp,
-                                    color = NeonPinkPrimary
+                                    fontWeight = FontWeight.Medium,
+                                    letterSpacing = 1.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                        }
+
+                        if (isSelected) {
+                            Text(
+                                text = "ACTIVE",
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.5.sp,
+                                color = NeonPinkPrimary
+                            )
                         }
                     }
                 }
